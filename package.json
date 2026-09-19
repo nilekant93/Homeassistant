@@ -1,0 +1,21 @@
+{
+  "name": "kotitabletti",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host --port 5173",
+    "build": "vite build",
+    "watch": "vite build --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "lit": "^3.2.1"
+  },
+  "devDependencies": {
+    "@fontsource/ibm-plex-sans": "^5.1.0",
+    "@fontsource/space-grotesk": "^5.1.0",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.5"
+  }
+}

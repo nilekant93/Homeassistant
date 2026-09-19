@@ -1,0 +1,6 @@
+{
+  "name": "Kotitabletti",
+  "filename": "kotitabletti.js",
+  "render_readme": true,
+  "homeassistant": "2023.9.0"
+}

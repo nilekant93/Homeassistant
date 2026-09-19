@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="fi">
+  <head>
+    <meta charset="utf-8" />
+    <title>Kotitabletti — esikatselu</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        background: #3a3a3a;
+      }
+      /* The tablet's exact canvas, so what renders here is what renders there. */
+      #frame {
+        width: 1280px;
+        height: 800px;
+        margin: 0 auto;
+        overflow: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="frame"></div>
+
+    <script type="module">
+      import "./src/main.ts";
+
+      const now = new Date();
+      const day = (offset) => {
+        const d = new Date(now);
+        d.setDate(d.getDate() + offset);
+        return d.toISOString();
+      };
+
+      const light = (id, name, extra = {}) => [
+        id,
+        { entity_id: id, state: "on", attributes: { friendly_name: name, ...extra }, last_changed: "", last_updated: "" },
+      ];
+
+      const hass = {
+        language: "fi",
+        states: Object.fromEntries([
+          light("light.tv", "Lattiavalot", {
+            brightness: 178,
+            color_mode: "color_temp",
+            color_temp_kelvin: 2700,
+            rgb_color: [255, 180, 107],
+          }),
+          light("light.cottonvalot", "Cottonpallot"),
+          [
+            "light.valoverho",
+            { entity_id: "light.valoverho", state: "off", attributes: { friendly_name: "Valoverho" }, last_changed: "", last_updated: "" },
+          ],
+          light("light.makkarin_valopallot", "Joulutähti"),
+          [
+            "weather.forecast_koti",
+            {
+              entity_id: "weather.forecast_koti",
+              state: "partlycloudy",
+              attributes: { friendly_name: "Koti", temperature: 14 },
+              last_changed: "",
+              last_updated: "",
+            },
+          ],
+          [
+            "input_boolean.kiosk_moodi",
+            { entity_id: "input_boolean.kiosk_moodi", state: "on", attributes: {}, last_changed: "", last_updated: "" },
+          ],
+        ]),
+
+        callService(domain, service, data, target) {
+          console.log("callService", domain, service, data, target);
+          // Reflect the toggle so the preview behaves like the real thing.
+          const id = target?.entity_id;
+          const entity = this.states[id];
+          if (entity && service === "toggle") {
+            this.states = { ...this.states, [id]: { ...entity, state: entity.state === "on" ? "off" : "on" } };
+            render();
+          }
+          return Promise.resolve();
+        },
+
+        callApi(_method, path) {
+          console.log("callApi", path);
+          return Promise.resolve([
+            { summary: "Pyhäinpäivä", start: { date: "2026-10-31" }, end: { date: "2026-11-01" } },
+          ]);
+        },
+
+        connection: {
+          subscribeMessage(callback) {
+            const conditions = ["partlycloudy", "rainy", "cloudy", "sunny", "snowy", "pouring"];
+            callback({
+              forecast: conditions.map((condition, i) => ({
+                datetime: day(i),
+                condition,
+                temperature: 16 - i,
+                templow: 8 - i,
+              })),
+            });
+            return Promise.resolve(async () => {});
+          },
+        },
+      };
+
+      const card = document.createElement("kotitabletti-app");
+      card.setConfig({
+        type: "custom:kotitabletti-app",
+        start_page: "koti",
+        default_theme: "light",
+        home: {
+          weather: { entity: "weather.forecast_koti", forecast_days: 5 },
+          calendar: {
+            show_week_numbers: true,
+            next_event_from: "calendar.suomen_juhlapyhat",
+          },
+          lights: [
+            { entity: "light.tv", name: "Lattiavalot", style: "dimmer", icon: "bulb" },
+            { entity: "light.cottonvalot", name: "Cottonpallot", style: "switch", icon: "cotton" },
+            { entity: "light.valoverho", name: "Valoverho", style: "switch", icon: "curtain" },
+            { entity: "light.makkarin_valopallot", name: "Joulutähti", style: "switch", icon: "star" },
+          ],
+        },
+        settings: { kiosk_toggle: "input_boolean.kiosk_moodi", show_reload: true },
+      });
+
+      function render() {
+        card.hass = hass;
+      }
+
+      document.getElementById("frame").appendChild(card);
+      render();
+
+      // Handy while iterating: ?page=asetukset / ?theme=dark
+      const params = new URLSearchParams(location.search);
+      if (params.get("page")) card.page = params.get("page");
+      if (params.get("theme")) card.localTheme = params.get("theme");
+    </script>
+  </body>
+</html>

@@ -1,0 +1,6 @@
+node_modules/
+*.log
+.DS_Store
+
+# dist/ is deliberately NOT ignored — HACS installs the built file straight
+# from the repository and does not run a build itself.

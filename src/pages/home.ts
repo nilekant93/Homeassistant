@@ -1,0 +1,170 @@
+import { LitElement, html, css, nothing } from "lit";
+import { customElement, property, state } from "lit/decorators.js";
+import { base } from "../theme";
+import { clockTime, longDate } from "../format";
+import type { HomeConfig, HomeAssistant } from "../types";
+
+import "../components/light-card";
+import "../components/weather-card";
+import "../components/calendar-panel";
+
+/** Ticks often enough that the displayed minute is never visibly stale. */
+const TICK_MS = 10_000;
+
+@customElement("kt-page-home")
+export class KtPageHome extends LitElement {
+  @property({ attribute: false }) hass!: HomeAssistant;
+  @property({ attribute: false }) config: HomeConfig = {};
+
+  @state() private now = new Date();
+
+  private timer?: number;
+
+  static styles = [
+    base,
+    css`
+      :host {
+        display: block;
+        height: 100%;
+      }
+
+      .page {
+        height: 100%;
+        padding: 40px 48px;
+        display: flex;
+        gap: 32px;
+      }
+
+      .left {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 28px;
+        justify-content: center;
+      }
+
+      .top {
+        display: flex;
+        gap: 22px;
+        align-items: center;
+      }
+
+      .clock {
+        flex: 0 0 240px;
+      }
+
+      .time {
+        font-family: var(--font-display);
+        font-weight: 600;
+        font-size: 100px;
+        line-height: 1;
+        letter-spacing: -2px;
+        color: var(--text);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .date {
+        font-size: 17px;
+        color: var(--text-muted);
+        margin-top: 8px;
+      }
+
+      kt-weather-card {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .section-label {
+        font-size: 13px;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        font-weight: 600;
+        margin-bottom: 12px;
+      }
+
+      .lights {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .calendar {
+        flex: 0 0 408px;
+      }
+    `,
+  ];
+
+  connectedCallback() {
+    super.connectedCallback();
+    this.timer = window.setInterval(() => (this.now = new Date()), TICK_MS);
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    if (this.timer) clearInterval(this.timer);
+  }
+
+  render() {
+    const { clock, weather, calendar, lights = [] } = this.config;
+
+    return html`
+      <div class="page">
+        <div class="left">
+          <div class="top">
+            <div class="clock">
+              <div class="time">${clockTime(this.now)}</div>
+              ${clock?.show_weekday === false
+                ? nothing
+                : html`<div class="date">${longDate(this.now)}</div>`}
+            </div>
+
+            ${weather?.entity
+              ? html`
+                  <kt-weather-card
+                    .hass=${this.hass}
+                    .entityId=${weather.entity}
+                    .days=${weather.forecast_days ?? 5}
+                  ></kt-weather-card>
+                `
+              : nothing}
+          </div>
+
+          ${lights.length
+            ? html`
+                <div>
+                  <div class="section-label">Valot</div>
+                  <div class="lights">
+                    ${lights.map(
+                      (light) => html`
+                        <kt-light-card .hass=${this.hass} .config=${light}></kt-light-card>
+                      `
+                    )}
+                  </div>
+                </div>
+              `
+            : nothing}
+        </div>
+
+        ${calendar
+          ? html`
+              <div class="calendar">
+                <kt-calendar-panel
+                  .hass=${this.hass}
+                  .nextEventFrom=${calendar.next_event_from}
+                  .showWeekNumbers=${calendar.show_week_numbers ?? true}
+                ></kt-calendar-panel>
+              </div>
+            `
+          : nothing}
+      </div>
+    `;
+  }
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kt-page-home": KtPageHome;
+  }
+}

@@ -1,0 +1,115 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Kotitabletti — uusi käyttöliittymä (v2)
+#
+# Luo tälle OMA kojelauta (Asetukset → Kojelaudat → Lisää kojelauta) ja liitä
+# tämä sinne. Älä liitä nykyisen päälle — vanha jää silloin koskemattomaksi.
+#
+# Koko käyttöliittymä on yhdessä kortissa, koska designin sivupalkki on
+# pysyvä. Kortti hoitaa reitityksen itse, joten sivunvaihto on välitön.
+#
+# Toteutettuna: Koti ja Asetukset. Sivupalkin muut kohdat (Valot, Imuri,
+# Kauppalista, Junat) näkyvät himmennettyinä eivätkä reagoi kosketukseen.
+# ─────────────────────────────────────────────────────────────────────────────
+
+kiosk_mode:
+  entity_settings:
+    - entity:
+        input_boolean.kiosk_moodi: "on"
+      kiosk: true
+    - entity:
+        input_boolean.kiosk_moodi: "off"
+      kiosk: false
+
+views:
+  - title: Kotitabletti
+    path: koti
+    icon: mdi:home
+    # panel = yksi kortti täyttää näkymän. Yhdessä kioskitilan kanssa tämä
+    # antaa koko 1280 × 800 ruudun kortin käyttöön.
+    type: panel
+    # HA:n panel-näkymä jättää reunoille marginaalin, joka rikkoisi
+    # täysleveän asettelun.
+    card_mod:
+      style: |
+        hui-panel-view {
+          padding: 0 !important;
+        }
+        hui-panel-view > * {
+          margin: 0 !important;
+        }
+    cards:
+      - type: custom:kotitabletti-app
+
+        # ── Yleiset ──────────────────────────────────────────────────────────
+        start_page: koti
+        # Palaa aloitussivulle kun näyttöä ei ole koskettu. 0 = ei koskaan.
+        idle_return_minutes: 5
+
+        # Teema valitaan Asetukset-sivulta. Ilman theme_entityä valinta
+        # tallentuu tabletin omaan localStorageen — se riittää yhdelle
+        # laitteelle eikä vaadi HA:han mitään.
+        #
+        # Jos haluat teeman myös automaatioiden ulottuville, luo apuentiteetti
+        # (Asetukset → Laitteet ja palvelut → Aputoiminnot → Kytkin) ja
+        # osoita se tähän; päällä = tumma:
+        # theme_entity: input_boolean.tumma_teema
+        default_theme: light
+
+        # ── Navigaatio ───────────────────────────────────────────────────────
+        nav:
+          - page: koti
+            label: Koti
+            icon: home
+          - page: valot
+            label: Valot
+            icon: bulb
+          - page: imuri
+            label: Imuri
+            icon: vacuum
+          - page: kauppa
+            label: Kauppalista
+            icon: cart
+          - page: junat
+            label: Junat
+            icon: train
+
+        settings_nav:
+          page: asetukset
+          label: Asetukset
+          icon: sliders
+
+        # ── Kotinäkymä ───────────────────────────────────────────────────────
+        home:
+          weather:
+            entity: weather.forecast_koti
+            forecast_days: 5
+
+          calendar:
+            show_week_numbers: true
+            next_event_from: calendar.suomen_juhlapyhat
+
+          # Täsmälleen neljä mahtuu 2 × 2 -ruudukkoon.
+          # dimmer = kirkkauspalkki, tilarivi ja valon oma väri
+          # switch = pelkkä kytkin, teal-aksentti
+          lights:
+            - entity: light.tv
+              name: Lattiavalot
+              style: dimmer
+              icon: bulb
+            - entity: light.cottonvalot
+              name: Cottonpallot
+              style: switch
+              icon: cotton
+            - entity: light.valoverho
+              name: Valoverho
+              style: switch
+              icon: curtain
+            - entity: light.makkarin_valopallot
+              name: Joulutähti
+              style: switch
+              icon: star
+
+        # ── Asetukset-sivu ───────────────────────────────────────────────────
+        settings:
+          kiosk_toggle: input_boolean.kiosk_moodi
+          show_reload: true

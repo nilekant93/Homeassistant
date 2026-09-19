@@ -58,6 +58,21 @@ export class KtCalendarPanel extends LitElement {
         min-width: 0;
       }
 
+      /* These controls are small by design. Rather than grow them, each gets
+         an invisible tap area via ::after, which sits outside the layout box
+         and so reaches Android's 48dp minimum without shifting the header. */
+      .today-btn,
+      .step {
+        position: relative;
+      }
+
+      .today-btn::after,
+      .step::after {
+        content: "";
+        position: absolute;
+        inset: -18px -10px;
+      }
+
       .today-btn {
         border: 1px solid var(--border);
         color: var(--text-muted);
@@ -75,6 +90,10 @@ export class KtCalendarPanel extends LitElement {
         display: flex;
         align-items: center;
         justify-content: center;
+      }
+
+      .step::after {
+        inset: -18px;
       }
 
       .weekdays,

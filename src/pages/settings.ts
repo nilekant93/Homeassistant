@@ -94,15 +94,24 @@ export class KtPageSettings extends LitElement {
       }
 
       .segment {
+        position: relative;
         display: flex;
         align-items: center;
         gap: 7px;
-        padding: 8px 16px;
+        padding: 10px 18px;
         border-radius: 999px;
         font-size: 13px;
         font-weight: 600;
         color: var(--text-muted);
         transition: background 160ms ease, color 160ms ease;
+      }
+
+      /* Tap area reaching 48dp once the canvas is scaled to 75%, without
+         making the pill itself look chunky. */
+      .segment::after {
+        content: "";
+        position: absolute;
+        inset: -12px -4px;
       }
 
       .segment[data-active] {

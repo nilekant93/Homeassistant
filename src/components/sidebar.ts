@@ -34,7 +34,9 @@ export class KtSidebar extends LitElement {
       .items {
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        /* 2px between 64px tap boxes leaves the 10px the design draws
+           between the 56px visuals inside them. */
+        gap: 2px;
         align-items: center;
       }
 
@@ -49,18 +51,29 @@ export class KtSidebar extends LitElement {
         margin-bottom: 14px;
       }
 
+      /* The button is the tap target, the span inside it is what you see.
+         The canvas is scaled to 75% on the tablet, so a 64px box lands on
+         Android's 48dp minimum while the visual keeps the design's 56px. */
       .item {
+        width: 64px;
+        height: 64px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-muted);
+      }
+
+      .visual {
         width: 56px;
         height: 56px;
         border-radius: 16px;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: var(--text-muted);
         transition: background 160ms ease, color 160ms ease;
       }
 
-      .item[data-active] {
+      .item[data-active] .visual {
         background: var(--accent-amber-soft);
         color: var(--accent-amber);
       }
@@ -70,14 +83,14 @@ export class KtSidebar extends LitElement {
         cursor: default;
       }
 
-      .settings {
+      .settings .visual {
         width: 44px;
         height: 44px;
         border-radius: 12px;
         opacity: 0.7;
       }
 
-      .settings[data-active] {
+      .settings[data-active] .visual {
         background: var(--surface-2);
         color: var(--text);
         opacity: 1;
@@ -106,7 +119,9 @@ export class KtSidebar extends LitElement {
         aria-disabled=${enabled ? nothing : "true"}
         @click=${() => this.select(item, enabled)}
       >
-        ${icon(item.icon, size, extraClass === "settings" ? 1.7 : 1.8)}
+        <span class="visual">
+          ${icon(item.icon, size, extraClass === "settings" ? 1.7 : 1.8)}
+        </span>
       </button>
     `;
   }

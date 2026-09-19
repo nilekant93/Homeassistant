@@ -18,7 +18,11 @@ export default defineConfig({
         inlineDynamicImports: true,
       },
     },
-    target: "es2022",
+    // Deliberately conservative. The Home Assistant companion app renders in
+    // the device's Android WebView, which on an older tablet can predate
+    // operators like `??=` — and a parse error there means the module never
+    // runs and the card reports itself as a missing custom element.
+    target: "es2019",
     minify: "esbuild",
   },
 });

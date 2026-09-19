@@ -9,11 +9,11 @@
         margin: 0;
         background: #3a3a3a;
       }
-      /* The tablet's exact canvas, so what renders here is what renders there. */
+      /* Mirrors HA's panel view: the card gets the whole window and scales its
+         own canvas to fit, exactly as it does on the tablet. */
       #frame {
-        width: 1280px;
-        height: 800px;
-        margin: 0 auto;
+        width: 100vw;
+        height: 100vh;
         overflow: hidden;
       }
     </style>

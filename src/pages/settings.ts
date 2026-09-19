@@ -10,6 +10,8 @@ export class KtPageSettings extends LitElement {
   @property({ attribute: false }) hass!: HomeAssistant;
   @property({ attribute: false }) config: SettingsConfig = {};
   @property() theme: Theme = "light";
+  @property({ attribute: false }) viewport = { width: 0, height: 0 };
+  @property({ type: Number }) scale = 1;
 
   static styles = [
     base,
@@ -108,6 +110,12 @@ export class KtPageSettings extends LitElement {
         color: var(--text);
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
       }
+
+      .diagnostics {
+        font-size: 12px;
+        color: var(--text-muted);
+        font-variant-numeric: tabular-nums;
+      }
     `,
   ];
 
@@ -192,6 +200,12 @@ export class KtPageSettings extends LitElement {
                   ${icon("reload", 20, 1.8)}
                 </button>
               `}
+        </div>
+
+        <div class="diagnostics">
+          Näyttö ${this.viewport.width} × ${this.viewport.height} CSS-pikseliä ·
+          skaalaus ${Math.round(this.scale * 100)} % ·
+          pikselitiheys ${window.devicePixelRatio}
         </div>
       </div>
     `;

@@ -36,7 +36,11 @@ export class KotitablettiApp extends LitElement {
   /** Used only when no `theme_entity` is configured. */
   @state() private localTheme: Theme = "light";
 
+  /** Live viewport measurement, surfaced on the settings page for diagnosis. */
+  @state() private viewport = { width: 0, height: 0 };
+
   private idleTimer?: number;
+  private onResize = () => this.measureViewport();
 
   static styles = [
     tokens,
@@ -46,11 +50,25 @@ export class KotitablettiApp extends LitElement {
         display: block;
       }
 
-      .shell {
-        /* The card owns the whole screen. With kiosk mode on, that is exactly
-           the viewport; with the HA header visible it overflows by its height,
-           which is the state this UI is not designed for anyway. */
+      /* The viewport is whatever the device gives us; the canvas inside it is
+         always exactly the size the design was drawn for, scaled to fit. */
+      .viewport {
+        position: relative;
+        width: 100%;
         height: 100vh;
+        overflow: hidden;
+        background: var(--bg);
+      }
+
+      /* Centred by absolute positioning rather than flex: the canvas is
+         usually WIDER than the viewport before scaling, and an oversized flex
+         item centres inconsistently across engines. Translating by half its
+         own size and scaling about the centre is unambiguous everywhere. */
+      .shell {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform-origin: center center;
         display: flex;
         background: var(--bg);
         color: var(--text);
@@ -104,11 +122,38 @@ export class KotitablettiApp extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     this.resetIdleTimer();
+    this.measureViewport();
+    window.addEventListener("resize", this.onResize);
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
     if (this.idleTimer) clearTimeout(this.idleTimer);
+    window.removeEventListener("resize", this.onResize);
+  }
+
+  /**
+   * Measured from the window rather than this element: the host's own height
+   * is derived from its content, so asking it how tall it may be is circular.
+   * In kiosk mode the window is exactly the screen, which is the target state.
+   */
+  private measureViewport() {
+    this.viewport = { width: window.innerWidth, height: window.innerHeight };
+  }
+
+  private get canvas() {
+    return {
+      width: this.config?.canvas_width ?? 1280,
+      height: this.config?.canvas_height ?? 800,
+    };
+  }
+
+  /** How much the design canvas must shrink (or grow) to fit the screen. */
+  private get scale(): number {
+    if (this.config?.fit === false) return 1;
+    const { width, height } = this.viewport;
+    if (!width || !height) return 1;
+    return Math.min(width / this.canvas.width, height / this.canvas.height);
   }
 
   private readStoredTheme(): Theme | undefined {
@@ -191,6 +236,8 @@ export class KotitablettiApp extends LitElement {
             .hass=${this.hass}
             .config=${this.config.settings ?? {}}
             .theme=${this.theme}
+            .viewport=${this.viewport}
+            .scale=${this.scale}
           ></kt-page-settings>
         `;
       default: {
@@ -208,21 +255,27 @@ export class KotitablettiApp extends LitElement {
   render() {
     if (!this.config) return html``;
 
+    const { width, height } = this.canvas;
+    const fit = `width: ${width}px; height: ${height}px;
+                 transform: translate(-50%, -50%) scale(${this.scale});`;
+
     return html`
       <div
-        class="shell"
+        class="viewport"
         @navigate=${this.onNavigate}
         @theme-change=${this.onThemeChange}
         @pointerdown=${() => this.resetIdleTimer()}
       >
-        <kt-sidebar
-          .items=${this.config.nav ?? DEFAULT_NAV}
-          .settingsItem=${this.config.settings_nav ?? DEFAULT_SETTINGS_NAV}
-          .activePage=${this.page}
-          .availablePages=${IMPLEMENTED}
-        ></kt-sidebar>
+        <div class="shell" style=${fit}>
+          <kt-sidebar
+            .items=${this.config.nav ?? DEFAULT_NAV}
+            .settingsItem=${this.config.settings_nav ?? DEFAULT_SETTINGS_NAV}
+            .activePage=${this.page}
+            .availablePages=${IMPLEMENTED}
+          ></kt-sidebar>
 
-        <main>${this.renderPage()}</main>
+          <main>${this.renderPage()}</main>
+        </div>
       </div>
     `;
   }

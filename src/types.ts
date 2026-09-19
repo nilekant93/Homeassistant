@@ -70,6 +70,11 @@ export interface CardConfig {
   settings_nav?: NavItem;
   home?: HomeConfig;
   settings?: SettingsConfig;
+  /** Size the design was drawn for; the canvas scales to fit the real screen. */
+  canvas_width?: number;
+  canvas_height?: number;
+  /** Set false to render the canvas at 1:1 and let it overflow. */
+  fit?: boolean;
 }
 
 export type Theme = "light" | "dark";

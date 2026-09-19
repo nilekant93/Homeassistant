@@ -69,10 +69,17 @@ export interface SettingsConfig {
 export interface CardConfig {
   type: string;
   start_page?: string;
-  idle_return_minutes?: number;
-  /** Where the chosen theme is stored. Without an entity it lives in localStorage. */
-  theme_entity?: string;
-  default_theme?: Theme;
+  /** Seconds of no touch before returning to the start page. 0 disables it. */
+  idle_return_seconds?: number;
+  /** Pages the idle return never applies to; defaults to the settings page. */
+  idle_exempt_pages?: string[];
+  /**
+   * An optional `input_select` holding light / dark / schedule, for sharing
+   * the choice with automations. Without one it lives in localStorage.
+   */
+  theme_mode_entity?: string;
+  default_theme_mode?: ThemeMode;
+  theme_schedule?: ThemeScheduleConfig;
   nav?: NavItem[];
   settings_nav?: NavItem;
   home?: HomeConfig;
@@ -86,6 +93,24 @@ export interface CardConfig {
 }
 
 export type Theme = "light" | "dark";
+
+/**
+ * "light" and "dark" are the user's own choice; "schedule" hands the decision
+ * to the clock. Picking a theme by hand always drops out of "schedule", so
+ * the two settings rows can never both claim to be in charge.
+ */
+export type ThemeMode = Theme | "schedule";
+
+export interface ThemeScheduleConfig {
+  /** "sun" follows sun.sun; "times" uses light_at / dark_at. */
+  source?: "sun" | "times";
+  sun_entity?: string;
+  light_at?: string;
+  dark_at?: string;
+  /** Forces dark inside this window whatever the sun is doing. */
+  force_dark_from?: string;
+  force_dark_to?: string;
+}
 
 /** A single day from `weather/subscribe_forecast`. */
 export interface ForecastDay {

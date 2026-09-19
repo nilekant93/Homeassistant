@@ -65,6 +65,19 @@
             "input_boolean.kiosk_moodi",
             { entity_id: "input_boolean.kiosk_moodi", state: "on", attributes: {}, last_changed: "", last_updated: "" },
           ],
+          [
+            "sun.sun",
+            {
+              entity_id: "sun.sun",
+              state: "below_horizon",
+              attributes: {
+                next_rising: new Date(now.getTime() + 9 * 3600e3).toISOString(),
+                next_setting: new Date(now.getTime() + 20 * 3600e3).toISOString(),
+              },
+              last_changed: "",
+              last_updated: "",
+            },
+          ],
         ]),
 
         callService(domain, service, data, target) {
@@ -124,7 +137,15 @@
       card.setConfig({
         type: "custom:kotitabletti-app",
         start_page: "koti",
-        default_theme: "light",
+        idle_return_seconds: 10,
+        idle_exempt_pages: ["asetukset"],
+        default_theme_mode: "schedule",
+        theme_schedule: {
+          source: "sun",
+          sun_entity: "sun.sun",
+          force_dark_from: "23:00",
+          force_dark_to: "06:30",
+        },
         home: {
           weather: { entity: "weather.forecast_koti", forecast_days: 5 },
           calendar: {
@@ -159,7 +180,7 @@
       // Handy while iterating: ?page=asetukset / ?theme=dark
       const params = new URLSearchParams(location.search);
       if (params.get("page")) card.page = params.get("page");
-      if (params.get("theme")) card.localTheme = params.get("theme");
+      if (params.get("theme")) card.localMode = params.get("theme");
     </script>
   </body>
 </html>

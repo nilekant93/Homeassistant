@@ -42,18 +42,39 @@ views:
 
         # ── Yleiset ──────────────────────────────────────────────────────────
         start_page: koti
-        # Palaa aloitussivulle kun näyttöä ei ole koskettu. 0 = ei koskaan.
-        idle_return_minutes: 5
 
-        # Teema valitaan Asetukset-sivulta. Ilman theme_entityä valinta
-        # tallentuu tabletin omaan localStorageen — se riittää yhdelle
-        # laitteelle eikä vaadi HA:han mitään.
+        # Palaa aloitussivulle kun ruutuun ei ole koskettu. 0 = ei koskaan.
+        # Ajastin nollautuu myös sormen liikkeestä, ei pelkästä painalluksesta,
+        # ja pysähtyy niin kauan kuin väripaletti-ikkuna on auki.
+        idle_return_seconds: 10
+        idle_exempt_pages:
+          - asetukset
+
+        # Teema: light | dark | schedule.
+        # Käsivalinta asetussivulta kytkee ajastuksen pois, ja ajastuksen
+        # päälle kytkeminen poistaa käsivalinnan korostuksen.
         #
-        # Jos haluat teeman myös automaatioiden ulottuville, luo apuentiteetti
-        # (Asetukset → Laitteet ja palvelut → Aputoiminnot → Kytkin) ja
-        # osoita se tähän; päällä = tumma:
-        # theme_entity: input_boolean.tumma_teema
-        default_theme: light
+        # Valinta tallentuu tabletin localStorageen. Jos haluat sen myös
+        # automaatioiden ulottuville, luo valintalista-aputoiminto arvoilla
+        # light / dark / schedule ja osoita se tähän:
+        # theme_mode_entity: input_select.tabletin_teema
+        default_theme_mode: schedule
+
+        theme_schedule:
+          # sun   = seuraa auringonnousua ja -laskua
+          # times = kiinteät kellonajat alla
+          source: sun
+          sun_entity: sun.sun
+
+          # Pakotettu yö. Tämä on Oulussa tarpeen: kesäkuussa aurinko on
+          # horisontin yläpuolella lähes vuorokauden, joten pelkkä aurinko
+          # pitäisi ruudun kirkkaana läpi yön.
+          force_dark_from: "23:00"
+          force_dark_to: "06:30"
+
+          # Käytetään vain jos source: times
+          light_at: "07:00"
+          dark_at: "21:00"
 
         # ── Navigaatio ───────────────────────────────────────────────────────
         nav:

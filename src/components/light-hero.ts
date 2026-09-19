@@ -1,4 +1,4 @@
-import { LitElement, html, css, nothing } from "lit";
+import { LitElement, html, css, nothing, type PropertyValues } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { base, switchStyles } from "../theme";
 import { icon } from "../icons";
@@ -125,6 +125,19 @@ export class KtLightHero extends LitElement {
   disconnectedCallback() {
     super.disconnectedCallback();
     if (this.trailing) clearTimeout(this.trailing);
+    // Leaving the page with the dialog open must not strand the idle timer.
+    if (this.dialogOpen) this.announceModal(false);
+  }
+
+  protected updated(changed: PropertyValues) {
+    if (changed.has("dialogOpen")) this.announceModal(this.dialogOpen);
+  }
+
+  /** Lets the shell suspend the idle return while the palette is being read. */
+  private announceModal(open: boolean) {
+    this.dispatchEvent(
+      new CustomEvent("modal-state", { detail: { open }, bubbles: true, composed: true })
+    );
   }
 
   private get entity(): HassEntity | undefined {

@@ -3,13 +3,14 @@ import { customElement, property } from "lit/decorators.js";
 import { base, switchStyles } from "../theme";
 import { icon } from "../icons";
 import { isOn } from "../format";
-import type { HomeAssistant, SettingsConfig, Theme } from "../types";
+import type { HomeAssistant, SettingsConfig, Theme, ThemeMode } from "../types";
 
 @customElement("kt-page-settings")
 export class KtPageSettings extends LitElement {
   @property({ attribute: false }) hass!: HomeAssistant;
   @property({ attribute: false }) config: SettingsConfig = {};
-  @property() theme: Theme = "light";
+  @property() mode: ThemeMode = "light";
+  @property() scheduleSummary = "";
   @property({ attribute: false }) viewport = { width: 0, height: 0 };
   @property({ type: Number }) scale = 1;
 
@@ -145,11 +146,13 @@ export class KtPageSettings extends LitElement {
   };
 
   private renderThemeRow() {
+    // Neither segment is active while the schedule is in charge, so the two
+    // rows can never both look like they are deciding the theme.
     const segment = (value: Theme, label: string, iconName: string) => html`
       <button
         class="segment"
-        ?data-active=${this.theme === value}
-        aria-pressed=${this.theme === value ? "true" : "false"}
+        ?data-active=${this.mode === value}
+        aria-pressed=${this.mode === value ? "true" : "false"}
         @click=${() => this.setTheme(value)}
       >
         ${icon(iconName, 16, 1.8)} ${label}
@@ -160,12 +163,39 @@ export class KtPageSettings extends LitElement {
       <div class="row">
         <div class="row-text">
           <div class="row-title">Teema</div>
-          <div class="row-desc">Vaalea päiväkäyttöön, tumma illaksi</div>
+          <div class="row-desc">
+            ${this.mode === "schedule"
+              ? "Ajastus päättää — valitse tästä ohittaaksesi sen"
+              : "Vaalea päiväkäyttöön, tumma illaksi"}
+          </div>
         </div>
         <div class="segmented">
           ${segment("light", "Vaalea", "sun")} ${segment("dark", "Tumma", "moon")}
         </div>
       </div>
+    `;
+  }
+
+  private renderScheduleRow() {
+    const on = this.mode === "schedule";
+
+    return html`
+      <button
+        class="row"
+        aria-pressed=${on ? "true" : "false"}
+        @click=${() =>
+          this.dispatchEvent(
+            new CustomEvent("schedule-toggle", { bubbles: true, composed: true })
+          )}
+      >
+        <div class="row-text">
+          <div class="row-title">Ajastus</div>
+          <div class="row-desc">${this.scheduleSummary || "Vaihtaa teeman automaattisesti"}</div>
+        </div>
+        <div class="track" ?data-on=${on} style=${`background: ${on ? "var(--accent-teal)" : "var(--border)"}`}>
+          <div class="knob"></div>
+        </div>
+      </button>
     `;
   }
 
@@ -197,7 +227,7 @@ export class KtPageSettings extends LitElement {
         </div>
 
         <div class="card">
-          ${this.renderThemeRow()} ${this.renderKioskRow()}
+          ${this.renderThemeRow()} ${this.renderScheduleRow()} ${this.renderKioskRow()}
           ${this.config.show_reload === false
             ? nothing
             : html`

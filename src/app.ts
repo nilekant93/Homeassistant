@@ -1,8 +1,8 @@
 import { LitElement, html, css } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { base, tokens } from "./theme";
-import { isOn } from "./format";
-import type { CardConfig, HomeAssistant, NavItem, Theme } from "./types";
+import { describeSchedule, scheduledTheme } from "./schedule";
+import type { CardConfig, HomeAssistant, NavItem, Theme, ThemeMode } from "./types";
 
 import "./components/sidebar";
 import "./pages/home";
@@ -12,7 +12,13 @@ import "./pages/settings";
 /** Pages with an implementation. Everything else in `nav` renders as inert. */
 const IMPLEMENTED = ["koti", "valot", "asetukset"];
 
-const THEME_STORAGE_KEY = "kotitabletti.theme";
+const THEME_STORAGE_KEY = "kotitabletti.themeMode";
+
+/** How often the schedule is re-evaluated. */
+const SCHEDULE_TICK_MS = 30_000;
+
+const DEFAULT_IDLE_SECONDS = 10;
+const DEFAULT_IDLE_EXEMPT = ["asetukset"];
 
 const DEFAULT_NAV: NavItem[] = [
   { page: "koti", label: "Koti", icon: "home" },
@@ -34,13 +40,19 @@ export class KotitablettiApp extends LitElement {
 
   @state() private config!: CardConfig;
   @state() private page = "koti";
-  /** Used only when no `theme_entity` is configured. */
-  @state() private localTheme: Theme = "light";
+  /** Used only when no `theme_mode_entity` is configured. */
+  @state() private localMode: ThemeMode = "light";
+  /** Re-read on a timer so the schedule crosses its boundaries on its own. */
+  @state() private tick = new Date();
+  /** True while a modal is open, which suspends the idle return. */
+  @state() private modalOpen = false;
 
   /** Live viewport measurement, surfaced on the settings page for diagnosis. */
   @state() private viewport = { width: 0, height: 0 };
 
   private idleTimer?: number;
+  private scheduleTimer?: number;
+  private lastIdleReset = 0;
   private onResize = () => this.measureViewport();
 
   static styles = [
@@ -109,9 +121,8 @@ export class KotitablettiApp extends LitElement {
     this.config = config;
     this.page = config.start_page ?? "koti";
 
-    if (!config.theme_entity) {
-      const stored = this.readStoredTheme();
-      this.localTheme = stored ?? config.default_theme ?? "light";
+    if (!config.theme_mode_entity) {
+      this.localMode = this.readStoredMode() ?? config.default_theme_mode ?? "light";
     }
   }
 
@@ -125,11 +136,13 @@ export class KotitablettiApp extends LitElement {
     this.resetIdleTimer();
     this.measureViewport();
     window.addEventListener("resize", this.onResize);
+    this.scheduleTimer = window.setInterval(() => (this.tick = new Date()), SCHEDULE_TICK_MS);
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
     if (this.idleTimer) clearTimeout(this.idleTimer);
+    if (this.scheduleTimer) clearInterval(this.scheduleTimer);
     window.removeEventListener("resize", this.onResize);
   }
 
@@ -157,46 +170,62 @@ export class KotitablettiApp extends LitElement {
     return Math.min(width / this.canvas.width, height / this.canvas.height);
   }
 
-  private readStoredTheme(): Theme | undefined {
+  private readStoredMode(): ThemeMode | undefined {
     try {
       const value = localStorage.getItem(THEME_STORAGE_KEY);
-      return value === "dark" || value === "light" ? value : undefined;
+      return value === "dark" || value === "light" || value === "schedule" ? value : undefined;
     } catch {
       // Private mode or blocked site data — fall through to the default.
       return undefined;
     }
   }
 
-  private get theme(): Theme {
-    const entityId = this.config?.theme_entity;
+  /** Light, dark, or handed over to the schedule. */
+  private get mode(): ThemeMode {
+    const entityId = this.config?.theme_mode_entity;
     if (entityId) {
-      const entity = this.hass?.states[entityId];
-      // The helper is a plain toggle: on means dark.
-      if (entity) return isOn(entity) ? "dark" : "light";
+      const state = this.hass?.states[entityId]?.state;
+      if (state === "light" || state === "dark" || state === "schedule") return state;
     }
-    return this.localTheme;
+    return this.localMode;
   }
 
-  private onThemeChange = (event: CustomEvent<Theme>) => {
-    const theme = event.detail;
-    const entityId = this.config?.theme_entity;
+  /** What is actually painted: the chosen theme, or what the clock says. */
+  private get theme(): Theme {
+    const mode = this.mode;
+    if (mode !== "schedule") return mode;
+    return scheduledTheme(this.config?.theme_schedule, this.hass, this.tick);
+  }
 
+  private setMode(mode: ThemeMode) {
+    const entityId = this.config?.theme_mode_entity;
     if (entityId) {
       this.hass.callService(
-        "input_boolean",
-        theme === "dark" ? "turn_on" : "turn_off",
-        {},
+        "input_select",
+        "select_option",
+        { option: mode },
         { entity_id: entityId }
       );
       return;
     }
 
-    this.localTheme = theme;
+    this.localMode = mode;
     try {
-      localStorage.setItem(THEME_STORAGE_KEY, theme);
+      localStorage.setItem(THEME_STORAGE_KEY, mode);
     } catch {
       // Not persisting across reloads is survivable; the session still works.
     }
+  }
+
+  /** Picking a theme by hand always drops out of the schedule. */
+  private onThemeChange = (event: CustomEvent<Theme>) => {
+    this.setMode(event.detail);
+  };
+
+  private onScheduleToggle = () => {
+    // Turning the schedule off keeps what is on screen as the manual choice,
+    // so the display never flips theme at the moment the switch is pressed.
+    this.setMode(this.mode === "schedule" ? this.theme : "schedule");
   };
 
   private onNavigate = (event: CustomEvent<string>) => {
@@ -213,17 +242,44 @@ export class KotitablettiApp extends LitElement {
     this.setAttribute("data-theme", this.theme);
   }
 
-  /** Returns the tablet to the start page after a spell of no interaction. */
+  /**
+   * Returns the tablet to the start page after a spell of no interaction.
+   *
+   * Reset from pointer *movement* as well as presses: at a ten second timeout
+   * a slow drag on the brightness slider produces one pointerdown and then
+   * nothing, and the page would change under the user's finger mid-drag.
+   */
+  private onPointerActivity = () => {
+    // A drag fires pointermove at display rate; rebuilding the timeout on
+    // every frame is wasted work when the deadline is seconds away.
+    const now = Date.now();
+    if (now - this.lastIdleReset < 400) return;
+    this.lastIdleReset = now;
+    this.resetIdleTimer();
+  };
+
   private resetIdleTimer() {
     if (this.idleTimer) clearTimeout(this.idleTimer);
 
-    const minutes = this.config?.idle_return_minutes ?? 0;
-    if (!minutes) return;
+    const startPage = this.config?.start_page ?? "koti";
+    const seconds = this.config?.idle_return_seconds ?? DEFAULT_IDLE_SECONDS;
+    const exempt = this.config?.idle_exempt_pages ?? DEFAULT_IDLE_EXEMPT;
+
+    // Nothing to return from on the start page, and a modal is something the
+    // user is reading rather than ignoring.
+    if (!seconds || this.page === startPage || exempt.includes(this.page) || this.modalOpen) {
+      return;
+    }
 
     this.idleTimer = window.setTimeout(() => {
-      this.page = this.config.start_page ?? "koti";
-    }, minutes * 60_000);
+      this.page = startPage;
+    }, seconds * 1000);
   }
+
+  private onModalState = (event: CustomEvent<{ open: boolean }>) => {
+    this.modalOpen = event.detail.open;
+    this.resetIdleTimer();
+  };
 
   private renderPage() {
     switch (this.page) {
@@ -240,7 +296,8 @@ export class KotitablettiApp extends LitElement {
           <kt-page-settings
             .hass=${this.hass}
             .config=${this.config.settings ?? {}}
-            .theme=${this.theme}
+            .mode=${this.mode}
+            .scheduleSummary=${describeSchedule(this.config.theme_schedule, this.hass)}
             .viewport=${this.viewport}
             .scale=${this.scale}
           ></kt-page-settings>
@@ -269,7 +326,11 @@ export class KotitablettiApp extends LitElement {
         class="viewport"
         @navigate=${this.onNavigate}
         @theme-change=${this.onThemeChange}
-        @pointerdown=${() => this.resetIdleTimer()}
+        @schedule-toggle=${this.onScheduleToggle}
+        @modal-state=${this.onModalState}
+        @pointerdown=${this.onPointerActivity}
+        @pointermove=${this.onPointerActivity}
+        @pointerup=${this.onPointerActivity}
       >
         <div class="shell" style=${fit}>
           <kt-sidebar

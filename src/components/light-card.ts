@@ -153,8 +153,8 @@ export class KtLightCard extends LitElement {
             ${icon(this.config.icon ?? "bulb", 26)}
           </div>
 
-          <div class="track" style=${`background: ${on ? accent : "var(--border)"}`}>
-            <div class="knob" style=${`transform: translateX(${on ? "20px" : "3px"})`}></div>
+          <div class="track" ?data-on=${on} style=${`background: ${on ? accent : "var(--border)"}`}>
+            <div class="knob"></div>
           </div>
         </div>
 

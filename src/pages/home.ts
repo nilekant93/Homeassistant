@@ -37,10 +37,11 @@ export class KtPageHome extends LitElement {
       }
 
       /* Upper band: clock and weather on the left, calendar on the right.
-         Its height is what makes the calendar half-height rather than
-         running the full length of the screen. */
+         Both columns stretch to this height, which is what keeps the bottom
+         of the calendar level with the bottom of the weather card — and what
+         stops the calendar running the full length of the screen. */
       .top {
-        flex: 0 0 358px;
+        flex: 0 0 444px;
         display: flex;
         gap: 32px;
       }
@@ -141,6 +142,7 @@ export class KtPageHome extends LitElement {
                     .hass=${this.hass}
                     .entityId=${weather.entity}
                     .days=${weather.forecast_days ?? 5}
+                    .hours=${weather.forecast_hours ?? 8}
                   ></kt-weather-card>
                 `
               : nothing}

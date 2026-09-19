@@ -69,26 +69,36 @@ export const base = css`
   }
 `;
 
-/** The pill switch used by light cards and the settings rows. */
+/**
+ * The pill switch used by light cards, the hero card and the settings rows.
+ *
+ * The travel distance lives here with the dimensions rather than inline at
+ * each call site — three copies of the same magic number drift apart the
+ * moment the switch is resized.
+ */
 export const switchStyles = css`
   .track {
-    width: 38px;
-    height: 21px;
-    border-radius: 11px;
+    width: 56px;
+    height: 32px;
+    border-radius: 16px;
     position: relative;
-    flex: 0 0 38px;
+    flex: 0 0 56px;
     transition: background 180ms ease;
   }
 
   .knob {
-    width: 15px;
-    height: 15px;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
     background: #ffffff;
     position: absolute;
-    top: 3px;
-    left: 0;
+    top: 4px;
+    left: 4px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
     transition: transform 180ms ease;
+  }
+
+  .track[data-on] .knob {
+    transform: translateX(24px);
   }
 `;

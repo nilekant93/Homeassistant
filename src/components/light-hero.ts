@@ -235,8 +235,8 @@ export class KtLightHero extends LitElement {
             aria-pressed=${on ? "true" : "false"}
             @click=${this.toggle}
           >
-            <div class="track" style=${`background: ${on ? accent : "var(--border)"}`}>
-              <div class="knob" style=${`transform: translateX(${on ? "20px" : "3px"})`}></div>
+            <div class="track" ?data-on=${on} style=${`background: ${on ? accent : "var(--border)"}`}>
+              <div class="knob"></div>
             </div>
           </button>
         </div>

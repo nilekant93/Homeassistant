@@ -45,7 +45,7 @@ export interface LightConfig {
 
 export interface HomeConfig {
   clock?: { show_weekday?: boolean };
-  weather?: { entity: string; forecast_days?: number };
+  weather?: { entity: string; forecast_days?: number; forecast_hours?: number };
   calendar?: {
     entities?: string[];
     show_week_numbers?: boolean;

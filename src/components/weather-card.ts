@@ -2,24 +2,27 @@ import { LitElement, html, css, nothing, type PropertyValues } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { base } from "../theme";
 import { weatherIcon } from "../icons";
-import { conditionLabel, roundTemp, weekdayShort } from "../format";
+import { conditionLabel, hourShort, roundTemp, weekdayShort } from "../format";
 import type { ForecastDay, HomeAssistant } from "../types";
 
 /**
- * Current conditions plus a short daily outlook.
+ * Current conditions, the next few hours, and the next few days.
  *
- * Since 2023.9 forecasts are no longer entity attributes — they arrive over a
- * websocket subscription, which this card owns for its own lifetime.
+ * Since 2023.9 forecasts are not entity attributes — they arrive over a
+ * websocket subscription, and `weather/subscribe_forecast` carries one type
+ * per subscription, so hourly and daily need one each.
  */
 @customElement("kt-weather-card")
 export class KtWeatherCard extends LitElement {
   @property({ attribute: false }) hass!: HomeAssistant;
   @property() entityId!: string;
   @property({ type: Number }) days = 5;
+  @property({ type: Number }) hours = 8;
 
-  @state() private forecast: ForecastDay[] = [];
+  @state() private daily: ForecastDay[] = [];
+  @state() private hourly: ForecastDay[] = [];
 
-  private unsubscribe?: () => Promise<void>;
+  private unsubs: Array<() => Promise<void>> = [];
   private subscribedTo?: string;
 
   static styles = [
@@ -38,8 +41,7 @@ export class KtWeatherCard extends LitElement {
         box-shadow: var(--shadow);
         display: flex;
         flex-direction: column;
-        justify-content: space-between;
-        gap: 18px;
+        gap: 16px;
       }
 
       .now {
@@ -67,39 +69,44 @@ export class KtWeatherCard extends LitElement {
         margin-top: 6px;
       }
 
-      .outlook {
+      /* Hours and days read as separate bands without needing labels: the
+         rules carry the separation, and "22" versus "Su" says the rest. */
+      .strip {
+        flex: 1;
+        min-height: 0;
         display: flex;
         gap: 4px;
         border-top: 1px solid var(--border);
-        padding-top: 14px;
+        padding-top: 12px;
+        align-items: center;
       }
 
-      .day {
+      .slot {
         flex: 1;
         min-width: 0;
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 6px;
+        gap: 5px;
       }
 
-      .day-name {
+      .slot-name {
         font-size: 13px;
         font-weight: 600;
         color: var(--text-muted);
       }
 
-      .day svg {
+      .slot svg {
         color: var(--text);
       }
 
-      .day-temps {
+      .slot-temps {
         font-size: 15px;
         color: var(--text);
         white-space: nowrap;
       }
 
-      .day-low {
+      .low {
         color: var(--text-muted);
       }
     `,
@@ -107,49 +114,53 @@ export class KtWeatherCard extends LitElement {
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    this.unsubscribeForecast();
+    void this.unsubscribeAll();
   }
 
   protected willUpdate(changed: PropertyValues) {
-    // `hass` is replaced on every state change, so resubscribing on each one
-    // would tear down and rebuild the subscription constantly.
+    // `hass` is replaced on every state change; resubscribing on each one
+    // would tear the subscriptions down and rebuild them constantly.
     if (changed.has("hass") || changed.has("entityId")) {
       if (this.hass && this.entityId && this.subscribedTo !== this.entityId) {
-        void this.subscribeForecast();
+        void this.subscribeForecasts();
       }
     }
   }
 
-  private async subscribeForecast() {
-    await this.unsubscribeForecast();
+  private async subscribeForecasts() {
+    await this.unsubscribeAll();
     const entityId = this.entityId;
     this.subscribedTo = entityId;
 
-    try {
-      this.unsubscribe = await this.hass.connection.subscribeMessage<{
-        forecast: ForecastDay[];
-      }>(
-        (event) => {
-          this.forecast = event.forecast ?? [];
-        },
-        {
-          type: "weather/subscribe_forecast",
-          forecast_type: "daily",
-          entity_id: entityId,
-        }
-      );
-    } catch {
-      // An entity without daily forecast support leaves the outlook hidden
-      // rather than breaking the card.
-      this.subscribedTo = undefined;
+    for (const forecastType of ["daily", "hourly"] as const) {
+      try {
+        const unsub = await this.hass.connection.subscribeMessage<{
+          forecast: ForecastDay[];
+        }>(
+          (event) => {
+            const forecast = event.forecast ?? [];
+            if (forecastType === "daily") this.daily = forecast;
+            else this.hourly = forecast;
+          },
+          {
+            type: "weather/subscribe_forecast",
+            forecast_type: forecastType,
+            entity_id: entityId,
+          }
+        );
+        this.unsubs.push(unsub);
+      } catch {
+        // Not every weather entity offers both kinds; the row for a type it
+        // does not support simply stays hidden.
+      }
     }
   }
 
-  private async unsubscribeForecast() {
-    const unsub = this.unsubscribe;
-    this.unsubscribe = undefined;
+  private async unsubscribeAll() {
+    const unsubs = this.unsubs;
+    this.unsubs = [];
     this.subscribedTo = undefined;
-    if (unsub) {
+    for (const unsub of unsubs) {
       try {
         await unsub();
       } catch {
@@ -158,13 +169,41 @@ export class KtWeatherCard extends LitElement {
     }
   }
 
+  private strip(
+    entries: ForecastDay[],
+    label: (d: Date) => string,
+    showLow: boolean
+  ) {
+    if (!entries.length) return nothing;
+
+    return html`
+      <div class="strip">
+        ${entries.map((entry) => {
+          const date = new Date(entry.datetime);
+          return html`
+            <div class="slot">
+              <div class="slot-name">${label(date)}</div>
+              ${weatherIcon(entry.condition, 28, 1.6)}
+              <div class="slot-temps">
+                ${roundTemp(entry.temperature)}
+                ${showLow && entry.templow !== undefined
+                  ? html`<span class="low">${roundTemp(entry.templow)}</span>`
+                  : nothing}
+              </div>
+            </div>
+          `;
+        })}
+      </div>
+    `;
+  }
+
   render() {
     const e = this.hass?.states[this.entityId];
     const temperature = e?.attributes.temperature as number | undefined;
 
-    // Today's high and low come from the first forecast day; the entity itself
-    // only carries the current reading.
-    const today = this.forecast[0];
+    // Today's high and low come from the first daily entry; the entity itself
+    // carries only the current reading.
+    const today = this.daily[0];
     const summary = [
       conditionLabel(e?.state),
       today?.temperature !== undefined ? `Ylin ${roundTemp(today.temperature)}` : undefined,
@@ -172,8 +211,6 @@ export class KtWeatherCard extends LitElement {
     ]
       .filter(Boolean)
       .join(" · ");
-
-    const outlook = this.forecast.slice(1, this.days + 1);
 
     return html`
       <div class="card">
@@ -185,25 +222,8 @@ export class KtWeatherCard extends LitElement {
           </div>
         </div>
 
-        ${outlook.length
-          ? html`
-              <div class="outlook">
-                ${outlook.map((day) => {
-                  const date = new Date(day.datetime);
-                  return html`
-                    <div class="day">
-                      <div class="day-name">${weekdayShort(date)}</div>
-                      ${weatherIcon(day.condition, 30, 1.6)}
-                      <div class="day-temps">
-                        ${roundTemp(day.temperature)}
-                        <span class="day-low">${roundTemp(day.templow)}</span>
-                      </div>
-                    </div>
-                  `;
-                })}
-              </div>
-            `
-          : nothing}
+        ${this.strip(this.hourly.slice(0, this.hours), hourShort, false)}
+        ${this.strip(this.daily.slice(1, this.days + 1), weekdayShort, true)}
       </div>
     `;
   }

@@ -181,8 +181,8 @@ export class KtPageSettings extends LitElement {
           <div class="row-title">Kioskitila</div>
           <div class="row-desc">Piilottaa Home Assistantin otsikkopalkin ja sivuvalikon</div>
         </div>
-        <div class="track" style=${`background: ${on ? "var(--accent-teal)" : "var(--border)"}`}>
-          <div class="knob" style=${`transform: translateX(${on ? "20px" : "3px"})`}></div>
+        <div class="track" ?data-on=${on} style=${`background: ${on ? "var(--accent-teal)" : "var(--border)"}`}>
+          <div class="knob"></div>
         </div>
       </button>
     `;

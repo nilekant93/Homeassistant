@@ -37,6 +37,11 @@ export function weekdayShort(d: Date): string {
  * Built by hand rather than with Intl: the fi-FI locale separates hours and
  * minutes with a period ("20.32"), and the design calls for a colon.
  */
+/** "09", "22" — the hour labels on the weather card's hourly row. */
+export function hourShort(d: Date): string {
+  return String(d.getHours()).padStart(2, "0");
+}
+
 export function clockTime(d: Date): string {
   return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }

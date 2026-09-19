@@ -87,16 +87,34 @@
         },
 
         connection: {
-          subscribeMessage(callback) {
+          // Type-aware like the real thing: one subscription per forecast kind.
+          subscribeMessage(callback, msg) {
             const conditions = ["partlycloudy", "rainy", "cloudy", "sunny", "snowy", "pouring"];
-            callback({
-              forecast: conditions.map((condition, i) => ({
-                datetime: day(i),
-                condition,
-                temperature: 16 - i,
-                templow: 8 - i,
-              })),
-            });
+
+            if (msg.forecast_type === "hourly") {
+              const hour = (offset) => {
+                const d = new Date(now);
+                d.setHours(d.getHours() + offset, 0, 0, 0);
+                return d.toISOString();
+              };
+              callback({
+                forecast: Array.from({ length: 12 }, (_, i) => ({
+                  datetime: hour(i + 1),
+                  condition: conditions[i % conditions.length],
+                  temperature: 14 - Math.floor(i / 3),
+                })),
+              });
+            } else {
+              callback({
+                forecast: conditions.map((condition, i) => ({
+                  datetime: day(i),
+                  condition,
+                  temperature: 16 - i,
+                  templow: 8 - i,
+                })),
+              });
+            }
+
             return Promise.resolve(async () => {});
           },
         },

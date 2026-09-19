@@ -1105,17 +1105,19 @@ let X = class extends m {
             style=${`background: ${e ? r : "var(--surface-2)"};
                      color: ${e ? i : "var(--text-muted)"}`}
           >
-            ${G((a = this.config.icon) != null ? a : "bulb", 20)}
-          </div>
-
-          <div class="meta">
-            <div class="name">${(o = (l = this.config.name) != null ? l : s == null ? void 0 : s.attributes.friendly_name) != null ? o : this.config.entity}</div>
-            <div class="state">${this.stateLabel(s, t)}</div>
+            ${G((a = this.config.icon) != null ? a : "bulb", 26)}
           </div>
 
           <div class="track" style=${`background: ${e ? i : "var(--border)"}`}>
             <div class="knob" style=${`transform: translateX(${e ? "20px" : "3px"})`}></div>
           </div>
+        </div>
+
+        <div class="spacer"></div>
+
+        <div class="meta">
+          <div class="name">${(o = (l = this.config.name) != null ? l : s == null ? void 0 : s.attributes.friendly_name) != null ? o : this.config.entity}</div>
+          <div class="state">${this.stateLabel(s, t)}</div>
         </div>
 
         ${t ? h`
@@ -1143,22 +1145,13 @@ X.styles = [
         height: 100%;
         background: var(--surface);
         border: 1px solid var(--border);
-        border-radius: 16px;
-        padding: 16px 18px;
+        border-radius: 20px;
+        padding: 20px 22px;
         box-shadow: var(--shadow);
         display: flex;
         flex-direction: column;
-        gap: 12px;
         text-align: left;
         transition: opacity 180ms ease;
-      }
-
-      .card[data-dimmer] {
-        justify-content: space-between;
-      }
-
-      .card:not([data-dimmer]) {
-        justify-content: center;
       }
 
       .card[data-off] {
@@ -1170,17 +1163,25 @@ X.styles = [
         transform: scale(0.985);
       }
 
+      /* Controls at the top, identity at the bottom: at tile size the eye
+         lands on the icon first and reads the label last. */
       .row {
         display: flex;
         align-items: center;
+        justify-content: space-between;
         gap: 12px;
       }
 
+      .spacer {
+        flex: 1;
+        min-height: 12px;
+      }
+
       .icon-wrap {
-        width: 40px;
-        height: 40px;
-        flex: 0 0 40px;
-        border-radius: 12px;
+        width: 52px;
+        height: 52px;
+        flex: 0 0 52px;
+        border-radius: 16px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -1188,30 +1189,30 @@ X.styles = [
       }
 
       .meta {
-        flex: 1;
         min-width: 0;
       }
 
       .name {
-        font-size: 15px;
+        font-size: 18px;
         font-weight: 600;
         color: var(--text);
       }
 
       .state {
-        font-size: 13px;
+        font-size: 14px;
         color: var(--text-muted);
-        margin-top: 2px;
+        margin-top: 3px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
       }
 
       .bar {
-        height: 6px;
-        border-radius: 3px;
+        height: 8px;
+        border-radius: 4px;
         background: var(--surface-2);
         overflow: hidden;
+        margin-top: 16px;
       }
 
       .fill {
@@ -1283,7 +1284,7 @@ let T = class extends m {
     return h`
       <div class="card">
         <div class="now">
-          ${Tt(s == null ? void 0 : s.state, 46)}
+          ${Tt(s == null ? void 0 : s.state, 56)}
           <div>
             <div class="temp">${O(t)}</div>
             <div class="summary">${i}</div>
@@ -1297,7 +1298,7 @@ let T = class extends m {
       return h`
                     <div class="day">
                       <div class="day-name">${we(l)}</div>
-                      ${Tt(a.condition, 24, 1.6)}
+                      ${Tt(a.condition, 30, 1.6)}
                       <div class="day-temps">
                         ${O(a.temperature)}
                         <span class="day-low">${O(a.templow)}</span>
@@ -1319,39 +1320,41 @@ T.styles = [
       }
 
       .card {
+        height: 100%;
         background: var(--surface);
         border: 1px solid var(--border);
         border-radius: 20px;
-        padding: 20px 24px;
+        padding: 22px 26px;
         box-shadow: var(--shadow);
         display: flex;
         flex-direction: column;
+        justify-content: space-between;
         gap: 18px;
       }
 
       .now {
         display: flex;
         align-items: center;
-        gap: 18px;
+        gap: 22px;
       }
 
       .now svg {
-        flex: 0 0 46px;
+        flex: 0 0 56px;
         color: var(--text);
       }
 
       .temp {
         font-family: var(--font-display);
         font-weight: 600;
-        font-size: 42px;
+        font-size: 52px;
         line-height: 1;
         color: var(--text);
       }
 
       .summary {
-        font-size: 13px;
+        font-size: 15px;
         color: var(--text-muted);
-        margin-top: 5px;
+        margin-top: 6px;
       }
 
       .outlook {
@@ -1371,7 +1374,7 @@ T.styles = [
       }
 
       .day-name {
-        font-size: 12px;
+        font-size: 13px;
         font-weight: 600;
         color: var(--text-muted);
       }
@@ -1381,7 +1384,7 @@ T.styles = [
       }
 
       .day-temps {
-        font-size: 13px;
+        font-size: 15px;
         color: var(--text);
         white-space: nowrap;
       }
@@ -1650,8 +1653,8 @@ let U = class extends m {
     const { clock: s, weather: t, calendar: e, lights: i = [] } = this.config;
     return h`
       <div class="page">
-        <div class="left">
-          <div class="top">
+        <div class="top">
+          <div class="top-left">
             <div class="clock">
               <div class="time">${Me(this.now)}</div>
               ${(s == null ? void 0 : s.show_weekday) === !1 ? d : h`<div class="date">${be(this.now)}</div>`}
@@ -1666,27 +1669,27 @@ let U = class extends m {
                 ` : d}
           </div>
 
-          ${i.length ? h`
-                <div>
-                  <div class="section-label">Valot</div>
-                  <div class="lights">
-                    ${i.map(
-      (a) => h`
-                        <kt-light-card .hass=${this.hass} .config=${a}></kt-light-card>
-                      `
-    )}
-                  </div>
+          ${e ? h`
+                <div class="calendar">
+                  <kt-calendar-panel
+                    .hass=${this.hass}
+                    .nextEventFrom=${e.next_event_from}
+                    .showWeekNumbers=${(n = e.show_week_numbers) != null ? n : !0}
+                  ></kt-calendar-panel>
                 </div>
               ` : d}
         </div>
 
-        ${e ? h`
-              <div class="calendar">
-                <kt-calendar-panel
-                  .hass=${this.hass}
-                  .nextEventFrom=${e.next_event_from}
-                  .showWeekNumbers=${(n = e.show_week_numbers) != null ? n : !0}
-                ></kt-calendar-panel>
+        ${i.length ? h`
+              <div class="lights-section">
+                <div class="section-label">Valot</div>
+                <div class="lights">
+                  ${i.map(
+      (a) => h`
+                      <kt-light-card .hass=${this.hass} .config=${a}></kt-light-card>
+                    `
+    )}
+                </div>
               </div>
             ` : d}
       </div>
@@ -1705,26 +1708,29 @@ U.styles = [
         height: 100%;
         padding: 40px 48px;
         display: flex;
+        flex-direction: column;
+        gap: 26px;
+      }
+
+      /* Upper band: clock and weather on the left, calendar on the right.
+         Its height is what makes the calendar half-height rather than
+         running the full length of the screen. */
+      .top {
+        flex: 0 0 358px;
+        display: flex;
         gap: 32px;
       }
 
-      .left {
+      .top-left {
         flex: 1;
         min-width: 0;
         display: flex;
         flex-direction: column;
-        gap: 28px;
-        justify-content: center;
-      }
-
-      .top {
-        display: flex;
         gap: 22px;
-        align-items: center;
       }
 
       .clock {
-        flex: 0 0 240px;
+        flex: 0 0 auto;
       }
 
       .time {
@@ -1746,6 +1752,14 @@ U.styles = [
       kt-weather-card {
         flex: 1;
         min-width: 0;
+        min-height: 0;
+      }
+
+      .lights-section {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
       }
 
       .section-label {
@@ -1757,10 +1771,14 @@ U.styles = [
         margin-bottom: 12px;
       }
 
+      /* One row across the full width. Four tiles of roughly 290 × 290
+         instead of the cramped 2 × 2 grid that only had half the width. */
       .lights {
+        flex: 1;
+        min-height: 0;
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 14px;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
       }
 
       .calendar {
@@ -2248,4 +2266,4 @@ ss.push({
   // the picker would be misleading.
   preview: !1
 });
-console.info("%c KOTITABLETTI %c 0.2.0 ", "background:#C17A3C;color:#241A10;font-weight:600", "");
+console.info("%c KOTITABLETTI %c 0.3.0 ", "background:#C17A3C;color:#241A10;font-weight:600", "");

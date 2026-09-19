@@ -32,26 +32,29 @@ export class KtPageHome extends LitElement {
         height: 100%;
         padding: 40px 48px;
         display: flex;
+        flex-direction: column;
+        gap: 26px;
+      }
+
+      /* Upper band: clock and weather on the left, calendar on the right.
+         Its height is what makes the calendar half-height rather than
+         running the full length of the screen. */
+      .top {
+        flex: 0 0 358px;
+        display: flex;
         gap: 32px;
       }
 
-      .left {
+      .top-left {
         flex: 1;
         min-width: 0;
         display: flex;
         flex-direction: column;
-        gap: 28px;
-        justify-content: center;
-      }
-
-      .top {
-        display: flex;
         gap: 22px;
-        align-items: center;
       }
 
       .clock {
-        flex: 0 0 240px;
+        flex: 0 0 auto;
       }
 
       .time {
@@ -73,6 +76,14 @@ export class KtPageHome extends LitElement {
       kt-weather-card {
         flex: 1;
         min-width: 0;
+        min-height: 0;
+      }
+
+      .lights-section {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
       }
 
       .section-label {
@@ -84,10 +95,14 @@ export class KtPageHome extends LitElement {
         margin-bottom: 12px;
       }
 
+      /* One row across the full width. Four tiles of roughly 290 × 290
+         instead of the cramped 2 × 2 grid that only had half the width. */
       .lights {
+        flex: 1;
+        min-height: 0;
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 14px;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
       }
 
       .calendar {
@@ -111,8 +126,8 @@ export class KtPageHome extends LitElement {
 
     return html`
       <div class="page">
-        <div class="left">
-          <div class="top">
+        <div class="top">
+          <div class="top-left">
             <div class="clock">
               <div class="time">${clockTime(this.now)}</div>
               ${clock?.show_weekday === false
@@ -131,30 +146,30 @@ export class KtPageHome extends LitElement {
               : nothing}
           </div>
 
-          ${lights.length
+          ${calendar
             ? html`
-                <div>
-                  <div class="section-label">Valot</div>
-                  <div class="lights">
-                    ${lights.map(
-                      (light) => html`
-                        <kt-light-card .hass=${this.hass} .config=${light}></kt-light-card>
-                      `
-                    )}
-                  </div>
+                <div class="calendar">
+                  <kt-calendar-panel
+                    .hass=${this.hass}
+                    .nextEventFrom=${calendar.next_event_from}
+                    .showWeekNumbers=${calendar.show_week_numbers ?? true}
+                  ></kt-calendar-panel>
                 </div>
               `
             : nothing}
         </div>
 
-        ${calendar
+        ${lights.length
           ? html`
-              <div class="calendar">
-                <kt-calendar-panel
-                  .hass=${this.hass}
-                  .nextEventFrom=${calendar.next_event_from}
-                  .showWeekNumbers=${calendar.show_week_numbers ?? true}
-                ></kt-calendar-panel>
+              <div class="lights-section">
+                <div class="section-label">Valot</div>
+                <div class="lights">
+                  ${lights.map(
+                    (light) => html`
+                      <kt-light-card .hass=${this.hass} .config=${light}></kt-light-card>
+                    `
+                  )}
+                </div>
               </div>
             `
           : nothing}

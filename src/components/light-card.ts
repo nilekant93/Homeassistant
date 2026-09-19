@@ -28,22 +28,13 @@ export class KtLightCard extends LitElement {
         height: 100%;
         background: var(--surface);
         border: 1px solid var(--border);
-        border-radius: 16px;
-        padding: 16px 18px;
+        border-radius: 20px;
+        padding: 20px 22px;
         box-shadow: var(--shadow);
         display: flex;
         flex-direction: column;
-        gap: 12px;
         text-align: left;
         transition: opacity 180ms ease;
-      }
-
-      .card[data-dimmer] {
-        justify-content: space-between;
-      }
-
-      .card:not([data-dimmer]) {
-        justify-content: center;
       }
 
       .card[data-off] {
@@ -55,17 +46,25 @@ export class KtLightCard extends LitElement {
         transform: scale(0.985);
       }
 
+      /* Controls at the top, identity at the bottom: at tile size the eye
+         lands on the icon first and reads the label last. */
       .row {
         display: flex;
         align-items: center;
+        justify-content: space-between;
         gap: 12px;
       }
 
+      .spacer {
+        flex: 1;
+        min-height: 12px;
+      }
+
       .icon-wrap {
-        width: 40px;
-        height: 40px;
-        flex: 0 0 40px;
-        border-radius: 12px;
+        width: 52px;
+        height: 52px;
+        flex: 0 0 52px;
+        border-radius: 16px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -73,30 +72,30 @@ export class KtLightCard extends LitElement {
       }
 
       .meta {
-        flex: 1;
         min-width: 0;
       }
 
       .name {
-        font-size: 15px;
+        font-size: 18px;
         font-weight: 600;
         color: var(--text);
       }
 
       .state {
-        font-size: 13px;
+        font-size: 14px;
         color: var(--text-muted);
-        margin-top: 2px;
+        margin-top: 3px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
       }
 
       .bar {
-        height: 6px;
-        border-radius: 3px;
+        height: 8px;
+        border-radius: 4px;
         background: var(--surface-2);
         overflow: hidden;
+        margin-top: 16px;
       }
 
       .fill {
@@ -151,17 +150,19 @@ export class KtLightCard extends LitElement {
             style=${`background: ${on ? accentSoft : "var(--surface-2)"};
                      color: ${on ? accent : "var(--text-muted)"}`}
           >
-            ${icon(this.config.icon ?? "bulb", 20)}
-          </div>
-
-          <div class="meta">
-            <div class="name">${this.config.name ?? e?.attributes.friendly_name ?? this.config.entity}</div>
-            <div class="state">${this.stateLabel(e, dimmer)}</div>
+            ${icon(this.config.icon ?? "bulb", 26)}
           </div>
 
           <div class="track" style=${`background: ${on ? accent : "var(--border)"}`}>
             <div class="knob" style=${`transform: translateX(${on ? "20px" : "3px"})`}></div>
           </div>
+        </div>
+
+        <div class="spacer"></div>
+
+        <div class="meta">
+          <div class="name">${this.config.name ?? e?.attributes.friendly_name ?? this.config.entity}</div>
+          <div class="state">${this.stateLabel(e, dimmer)}</div>
         </div>
 
         ${dimmer

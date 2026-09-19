@@ -30,39 +30,41 @@ export class KtWeatherCard extends LitElement {
       }
 
       .card {
+        height: 100%;
         background: var(--surface);
         border: 1px solid var(--border);
         border-radius: 20px;
-        padding: 20px 24px;
+        padding: 22px 26px;
         box-shadow: var(--shadow);
         display: flex;
         flex-direction: column;
+        justify-content: space-between;
         gap: 18px;
       }
 
       .now {
         display: flex;
         align-items: center;
-        gap: 18px;
+        gap: 22px;
       }
 
       .now svg {
-        flex: 0 0 46px;
+        flex: 0 0 56px;
         color: var(--text);
       }
 
       .temp {
         font-family: var(--font-display);
         font-weight: 600;
-        font-size: 42px;
+        font-size: 52px;
         line-height: 1;
         color: var(--text);
       }
 
       .summary {
-        font-size: 13px;
+        font-size: 15px;
         color: var(--text-muted);
-        margin-top: 5px;
+        margin-top: 6px;
       }
 
       .outlook {
@@ -82,7 +84,7 @@ export class KtWeatherCard extends LitElement {
       }
 
       .day-name {
-        font-size: 12px;
+        font-size: 13px;
         font-weight: 600;
         color: var(--text-muted);
       }
@@ -92,7 +94,7 @@ export class KtWeatherCard extends LitElement {
       }
 
       .day-temps {
-        font-size: 13px;
+        font-size: 15px;
         color: var(--text);
         white-space: nowrap;
       }
@@ -176,7 +178,7 @@ export class KtWeatherCard extends LitElement {
     return html`
       <div class="card">
         <div class="now">
-          ${weatherIcon(e?.state, 46)}
+          ${weatherIcon(e?.state, 56)}
           <div>
             <div class="temp">${roundTemp(temperature)}</div>
             <div class="summary">${summary}</div>
@@ -191,7 +193,7 @@ export class KtWeatherCard extends LitElement {
                   return html`
                     <div class="day">
                       <div class="day-name">${weekdayShort(date)}</div>
-                      ${weatherIcon(day.condition, 24, 1.6)}
+                      ${weatherIcon(day.condition, 30, 1.6)}
                       <div class="day-temps">
                         ${roundTemp(day.temperature)}
                         <span class="day-low">${roundTemp(day.templow)}</span>

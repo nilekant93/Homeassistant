@@ -4,7 +4,7 @@ Home Assistantin custom card, joka on koko käyttöliittymä seinätabletille.
 Suunniteltu kiinteään 1280 × 800 vaakanäyttöön, jota katsotaan HA:n
 mobiilisovelluksessa kioskitilassa.
 
-Toteutettuna **Koti** ja **Asetukset**. Sivupalkin muut kohdat (Valot, Imuri,
+Toteutettuna **Koti**, **Valot** ja **Asetukset**. Sivupalkin muut kohdat (Imuri,
 Kauppalista, Junat) näkyvät himmennettyinä eivätkä reagoi kosketukseen.
 
 ## Asennus HACS:lla

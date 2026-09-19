@@ -6,10 +6,11 @@ import type { CardConfig, HomeAssistant, NavItem, Theme } from "./types";
 
 import "./components/sidebar";
 import "./pages/home";
+import "./pages/lights";
 import "./pages/settings";
 
 /** Pages with an implementation. Everything else in `nav` renders as inert. */
-const IMPLEMENTED = ["koti", "asetukset"];
+const IMPLEMENTED = ["koti", "valot", "asetukset"];
 
 const THEME_STORAGE_KEY = "kotitabletti.theme";
 
@@ -229,6 +230,10 @@ export class KotitablettiApp extends LitElement {
       case "koti":
         return html`
           <kt-page-home .hass=${this.hass} .config=${this.config.home ?? {}}></kt-page-home>
+        `;
+      case "valot":
+        return html`
+          <kt-page-lights .hass=${this.hass} .config=${this.config.lights ?? {}}></kt-page-lights>
         `;
       case "asetukset":
         return html`

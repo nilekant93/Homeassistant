@@ -82,6 +82,14 @@ const paths: Record<string, SVGTemplateResult> = {
     <path d="M12 3.5l2.02 4.32 4.68.5-3.5 3.22.94 4.66L12 13.9l-4.14 2.3.94-4.66-3.5-3.22 4.68-.5L12 3.5Z" />
   `,
 
+  palette: svg`
+    <path d="M12 3.5a8.5 8.5 0 0 0 0 17c1.1 0 1.8-.7 1.8-1.6 0-.5-.2-.9-.5-1.2-.3-.3-.5-.7-.5-1.2 0-.9.8-1.6 1.7-1.6h1.4a4.6 4.6 0 0 0 4.6-4.6c0-3.8-3.8-6.8-8.5-6.8Z" />
+    <circle cx="7.6" cy="11.4" r="1.1" fill="currentColor" stroke="none" />
+    <circle cx="10.4" cy="7.6" r="1.1" fill="currentColor" stroke="none" />
+    <circle cx="15" cy="8" r="1.1" fill="currentColor" stroke="none" />
+  `,
+  close: svg`<path d="M6 6l12 12M18 6L6 18" />`,
+
   chevronLeft: svg`<path d="M14 6l-6 6 6 6" />`,
   chevronRight: svg`<path d="M10 6l6 6-6 6" />`,
   reload: svg`

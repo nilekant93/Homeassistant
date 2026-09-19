@@ -7,7 +7,7 @@
 # Koko käyttöliittymä on yhdessä kortissa, koska designin sivupalkki on
 # pysyvä. Kortti hoitaa reitityksen itse, joten sivunvaihto on välitön.
 #
-# Toteutettuna: Koti ja Asetukset. Sivupalkin muut kohdat (Valot, Imuri,
+# Toteutettuna: Koti, Valot ja Asetukset. Sivupalkin muut kohdat (Imuri,
 # Kauppalista, Junat) näkyvät himmennettyinä eivätkä reagoi kosketukseen.
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -107,6 +107,28 @@ views:
             - entity: light.makkarin_valopallot
               name: Joulutähti
               style: switch
+              icon: star
+
+        # ── Valot-sivu ───────────────────────────────────────────────────────
+        lights:
+          # Hero-kortti: kirkkausliuku ja väripaletti. Väririvi näkyy vain jos
+          # lamppu ilmoittaa tukevansa värejä, joten sama kortti kelpaa myös
+          # pelkälle himmennettävälle valolle.
+          primary:
+            entity: light.tv
+            name: Lattiavalot
+            icon: bulb
+
+          # Loput pelkkinä kytkiminä.
+          others:
+            - entity: light.cottonvalot
+              name: Cottonpallot
+              icon: cotton
+            - entity: light.valoverho
+              name: Valoverho
+              icon: curtain
+            - entity: light.makkarin_valopallot
+              name: Joulutähti
               icon: star
 
         # ── Asetukset-sivu ───────────────────────────────────────────────────

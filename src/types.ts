@@ -54,6 +54,13 @@ export interface HomeConfig {
   lights?: LightConfig[];
 }
 
+export interface LightsConfig {
+  /** The one light that gets the hero card with brightness and colour. */
+  primary?: LightConfig;
+  /** Everything else, rendered as plain switch tiles. */
+  others?: LightConfig[];
+}
+
 export interface SettingsConfig {
   kiosk_toggle?: string;
   show_reload?: boolean;
@@ -69,6 +76,7 @@ export interface CardConfig {
   nav?: NavItem[];
   settings_nav?: NavItem;
   home?: HomeConfig;
+  lights?: LightsConfig;
   settings?: SettingsConfig;
   /** Size the design was drawn for; the canvas scales to fit the real screen. */
   canvas_width?: number;

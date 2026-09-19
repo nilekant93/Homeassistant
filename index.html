@@ -40,10 +40,10 @@
         language: "fi",
         states: Object.fromEntries([
           light("light.tv", "Lattiavalot", {
-            brightness: 178,
-            color_mode: "color_temp",
-            color_temp_kelvin: 2700,
-            rgb_color: [255, 180, 107],
+            brightness: 115,
+            color_mode: "xy",
+            rgb_color: [102, 187, 106],
+            supported_color_modes: ["color_temp", "xy"],
           }),
           light("light.cottonvalot", "Cottonpallot"),
           [
@@ -118,6 +118,14 @@
             { entity: "light.cottonvalot", name: "Cottonpallot", style: "switch", icon: "cotton" },
             { entity: "light.valoverho", name: "Valoverho", style: "switch", icon: "curtain" },
             { entity: "light.makkarin_valopallot", name: "Joulutähti", style: "switch", icon: "star" },
+          ],
+        },
+        lights: {
+          primary: { entity: "light.tv", name: "Lattiavalot", icon: "bulb" },
+          others: [
+            { entity: "light.cottonvalot", name: "Cottonpallot", icon: "cotton" },
+            { entity: "light.valoverho", name: "Valoverho", icon: "curtain" },
+            { entity: "light.makkarin_valopallot", name: "Joulutähti", icon: "star" },
           ],
         },
         settings: { kiosk_toggle: "input_boolean.kiosk_moodi", show_reload: true },

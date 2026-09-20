@@ -445,6 +445,7 @@ export class KtPageVacuum extends LitElement {
                     .hass=${this.hass}
                     .cameraEntity=${this.config.map_camera}
                     .selected=${this.selected}
+                    .hiddenRooms=${this.config.hidden_rooms ?? []}
                   ></kt-vacuum-map>
                 `
               : nothing}

@@ -60,6 +60,8 @@ export class KtVacuumMap extends LitElement {
   @property({ attribute: false }) hass!: HomeAssistant;
   @property() cameraEntity!: string;
   @property({ attribute: false }) selected: number[] = [];
+  /** Segment ids to leave off the map entirely. */
+  @property({ attribute: false }) hiddenRooms: number[] = [];
 
   /** Natural pixel size of the map image, needed to place markers by percent. */
   @state() private natural = { width: 0, height: 0 };
@@ -106,9 +108,12 @@ export class KtVacuumMap extends LitElement {
         height: 64px;
         padding: 0 18px;
         border-radius: 999px;
-        background: var(--surface);
+        /* Translucent while unselected so the cleaned path shows through.
+           Only the background is see-through — the label stays at full
+           opacity, or it would be unreadable over a busy map. */
+        background: var(--surface-veil);
         border: 2px solid var(--border);
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
         color: var(--text);
         font-size: 15px;
         font-weight: 600;
@@ -116,13 +121,17 @@ export class KtVacuumMap extends LitElement {
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
+        transition: background 160ms ease, border-color 160ms ease, color 160ms ease,
+          box-shadow 160ms ease;
       }
 
+      /* Selection is the one state that turns solid, which is what makes it
+         readable at a glance across the whole map. */
       .marker[data-selected] {
         background: var(--accent-amber);
         border-color: var(--accent-amber);
         color: var(--on-amber);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
       }
 
       .marker:active {
@@ -183,6 +192,7 @@ export class KtVacuumMap extends LitElement {
 
     return Object.values(raw)
       .filter((r) => typeof r.x === "number" && typeof r.y === "number")
+      .filter((r) => !this.hiddenRooms.includes(Number(r.room_id)))
       .map((r) => {
         const point = transform({ x: r.x as number, y: r.y as number });
         return {

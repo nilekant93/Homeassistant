@@ -21,6 +21,11 @@ export const tokens = css`
     --accent-teal-soft: #dcefec;
     --on-amber: #241a10;
     --shadow: 0 1px 2px rgba(33, 32, 27, 0.05), 0 10px 28px rgba(33, 32, 27, 0.06);
+    /* Surface you can see through — used by the room chips on the vacuum map
+       so the cleaned path stays visible underneath them. Written out per
+       theme rather than mixed at runtime: color-mix is recent enough that an
+       older WebView would silently drop the background entirely. */
+    --surface-veil: rgba(255, 255, 255, 0.62);
 
     --font-body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
     --font-display: "Space Grotesk", "IBM Plex Sans", system-ui, sans-serif;
@@ -39,6 +44,7 @@ export const tokens = css`
     --accent-teal-soft: #1d3230;
     --on-amber: #241a10;
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 10px 28px rgba(0, 0, 0, 0.4);
+    --surface-veil: rgba(31, 33, 38, 0.62);
   }
 `;
 

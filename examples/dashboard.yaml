@@ -163,6 +163,8 @@ views:
         vacuum:
           entity: vacuum.d9_max_white
           map_camera: camera.d9_max_white_map
+          # Nimeamattomat jaannossegmentit jatetaan kokonaan pois.
+          hidden_rooms: [3, 6]
           show_suction: true
           show_consumables: true
 

@@ -64,6 +64,8 @@ export interface LightsConfig {
 export interface VacuumConfig {
   entity?: string;
   map_camera?: string;
+  /** Segment ids to leave off the map, e.g. unnamed leftovers. */
+  hidden_rooms?: number[];
   show_suction?: boolean;
   show_consumables?: boolean;
 }

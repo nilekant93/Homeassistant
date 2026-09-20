@@ -90,6 +90,27 @@ const paths: Record<string, SVGTemplateResult> = {
   `,
   close: svg`<path d="M6 6l12 12M18 6L6 18" />`,
 
+  play: svg`<path d="M8.5 5.2v13.6l11-6.8-11-6.8Z" />`,
+  pause: svg`<path d="M9 5.5v13M15 5.5v13" />`,
+  dock: svg`
+    <path d="M4 19.5h16" />
+    <path d="M6.5 19.5v-6a5.5 5.5 0 0 1 11 0v6" />
+    <path d="M12 14.5V9" />
+    <path d="M10 11l2-2 2 2" />
+  `,
+  brush: svg`
+    <path d="M9 13.5V6.2A2.2 2.2 0 0 1 11.2 4h1.6A2.2 2.2 0 0 1 15 6.2v7.3" />
+    <path d="M7.5 13.5h9v2.2a4.5 4.5 0 0 1-9 0v-2.2Z" />
+    <path d="M10 20.5v-1M12 21v-1.5M14 20.5v-1" />
+  `,
+  filter: svg`
+    <path d="M4.5 5h15l-5.8 6.9v6.4l-3.4 1.7v-8.1L4.5 5Z" />
+  `,
+  locate: svg`
+    <circle cx="12" cy="12" r="3.2" />
+    <path d="M12 3v2.6M12 18.4V21M3 12h2.6M18.4 12H21" />
+  `,
+
   chevronLeft: svg`<path d="M14 6l-6 6 6 6" />`,
   chevronRight: svg`<path d="M10 6l6 6-6 6" />`,
   reload: svg`

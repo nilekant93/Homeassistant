@@ -31,6 +31,34 @@
         return d.toISOString();
       };
 
+      // Real room data from the D9's camera entity: centre point, bounding box.
+      const ROOMS = [
+        { id: 1, name: "Olkkari", custom: "Olkkari", x: 3550, y: 3300, box: [1750, -1850, 5150, 7850] },
+        { id: 2, name: "Makkari", custom: "Makkari", x: 450, y: 3150, box: [-900, 1300, 1850, 5100] },
+        { id: 3, name: "Room 3", custom: undefined, x: 450, y: 6350, box: [-900, 4950, 3050, 8300] },
+        { id: 4, name: "Työhuone", custom: "Työhuone", x: 250, y: -250, box: [-1250, -1950, 1900, 700] },
+        { id: 5, name: "Keittiö", custom: "Keittiö", x: 3000, y: -2800, box: [1250, -4400, 4650, -1500] },
+        { id: 6, name: "Room 6", custom: undefined, x: 150, y: -3100, box: [-950, -4400, 1900, -1300] },
+      ];
+
+      // Stand-in for the integration's rendered map, drawn from the same
+      // bounding boxes through the same transform the card uses — so a marker
+      // landing in the wrong room here would land wrong on the tablet too.
+      const toMap = (vx, vy) => [162 + 0.08 * vx, 725 - 0.08 * vy];
+      const mapPicture =
+        "data:image/svg+xml;utf8," +
+        encodeURIComponent(
+          `<svg xmlns="http://www.w3.org/2000/svg" width="620" height="1140">
+             <rect width="620" height="1140" fill="#23262c"/>
+             ${ROOMS.map((r, i) => {
+               const [x0, y1] = toMap(r.box[0], r.box[3]);
+               const [x1, y0] = toMap(r.box[2], r.box[1]);
+               const fill = ["#3a4250", "#454b57", "#3f4a44", "#4a4450", "#3d4a52", "#4a473c"][i];
+               return `<rect x="${x0}" y="${y1}" width="${x1 - x0}" height="${y0 - y1}" fill="${fill}" stroke="#5a6170" stroke-width="2" rx="6"/>`;
+             }).join("")}
+           </svg>`
+        );
+
       const light = (id, name, extra = {}) => [
         id,
         { entity_id: id, state: "on", attributes: { friendly_name: name, ...extra }, last_changed: "", last_updated: "" },
@@ -64,6 +92,63 @@
           [
             "input_boolean.kiosk_moodi",
             { entity_id: "input_boolean.kiosk_moodi", state: "on", attributes: {}, last_changed: "", last_updated: "" },
+          ],
+          [
+            "vacuum.d9_max_white",
+            {
+              entity_id: "vacuum.d9_max_white",
+              state: "docked",
+              attributes: {
+                friendly_name: "D9 Max(White)",
+                status: "Charging",
+                battery_level: 93,
+                fan_speed: "Standard",
+                fan_speed_list: ["Silent", "Standard", "Strong", "Turbo"],
+                cleaning_time: 32,
+                cleaned_area: 30,
+                total_cleaned_area: 7478,
+                cleaning_count: 243,
+                main_brush_left: 50,
+                main_brush_time_left: 150,
+                side_brush_left: 25,
+                side_brush_time_left: 50,
+                filter_left: 1,
+                filter_time_left: 1,
+                error: "No error",
+                running: false,
+                paused: false,
+                charging: true,
+              },
+              last_changed: "",
+              last_updated: "",
+            },
+          ],
+          [
+            "camera.d9_max_white_map",
+            {
+              entity_id: "camera.d9_max_white_map",
+              state: "idle",
+              attributes: {
+                friendly_name: "D9 Max(White) Current Map",
+                entity_picture: mapPicture,
+                charger_position: { x: 492, y: 516, a: 271 },
+                vacuum_position: { x: 492, y: 516, a: 91 },
+                // Verbatim from the real camera entity.
+                calibration_points: [
+                  { vacuum: { x: 0, y: 0 }, map: { x: 162, y: 725 } },
+                  { vacuum: { x: 1000, y: 0 }, map: { x: 242, y: 725 } },
+                  { vacuum: { x: 0, y: 1000 }, map: { x: 162, y: 645 } },
+                ],
+                rooms: Object.fromEntries(
+                  ROOMS.map((r) => [
+                    String(r.id),
+                    { room_id: r.id, name: r.name, custom_name: r.custom, x: r.x, y: r.y },
+                  ])
+                ),
+              },
+              last_changed: "",
+              last_updated: "",
+            },
           ],
           [
             "sun.sun",
@@ -166,6 +251,10 @@
             { entity: "light.valoverho", name: "Valoverho", icon: "curtain" },
             { entity: "light.makkarin_valopallot", name: "Joulutähti", icon: "star" },
           ],
+        },
+        vacuum: {
+          entity: "vacuum.d9_max_white",
+          map_camera: "camera.d9_max_white_map",
         },
         settings: { kiosk_toggle: "input_boolean.kiosk_moodi", show_reload: true },
       });

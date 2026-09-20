@@ -7,8 +7,8 @@
 # Koko käyttöliittymä on yhdessä kortissa, koska designin sivupalkki on
 # pysyvä. Kortti hoitaa reitityksen itse, joten sivunvaihto on välitön.
 #
-# Toteutettuna: Koti, Valot ja Asetukset. Sivupalkin muut kohdat (Imuri,
-# Kauppalista, Junat) näkyvät himmennettyinä eivätkä reagoi kosketukseen.
+# Toteutettuna: Koti, Valot, Imuri ja Asetukset. Sivupalkin muut kohdat
+# (Kauppalista, Junat) näkyvät himmennettyinä eivätkä reagoi kosketukseen.
 # ─────────────────────────────────────────────────────────────────────────────
 
 kiosk_mode:
@@ -151,6 +151,20 @@ views:
             - entity: light.makkarin_valopallot
               name: Joulutähti
               icon: star
+
+        # ── Imuri-sivu ───────────────────────────────────────────────────────
+        # Huoneet, niiden nimet ja sijainnit luetaan suoraan kameran
+        # attribuuteista, samoin kalibrointipisteet joilla huonemerkit
+        # sijoitetaan kartalle. Mitään ei siis tarvitse listata tässä.
+        #
+        # Huoneen napautus valitsee sen; useamman voi valita kerralla, ja
+        # "Siivoa valitut" kutsuu dreame_vacuum.vacuum_clean_segment-palvelua
+        # kaikilla valituilla tunnuksilla.
+        vacuum:
+          entity: vacuum.d9_max_white
+          map_camera: camera.d9_max_white_map
+          show_suction: true
+          show_consumables: true
 
         # ── Asetukset-sivu ───────────────────────────────────────────────────
         settings:

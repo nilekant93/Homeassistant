@@ -61,6 +61,13 @@ export interface LightsConfig {
   others?: LightConfig[];
 }
 
+export interface VacuumConfig {
+  entity?: string;
+  map_camera?: string;
+  show_suction?: boolean;
+  show_consumables?: boolean;
+}
+
 export interface SettingsConfig {
   kiosk_toggle?: string;
   show_reload?: boolean;
@@ -84,6 +91,7 @@ export interface CardConfig {
   settings_nav?: NavItem;
   home?: HomeConfig;
   lights?: LightsConfig;
+  vacuum?: VacuumConfig;
   settings?: SettingsConfig;
   /** Size the design was drawn for; the canvas scales to fit the real screen. */
   canvas_width?: number;

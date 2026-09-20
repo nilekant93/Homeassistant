@@ -22,4 +22,4 @@ registry.push({
   preview: false,
 });
 
-console.info("%c KOTITABLETTI %c 0.9.0 ", "background:#C17A3C;color:#241A10;font-weight:600", "");
+console.info("%c KOTITABLETTI %c 0.10.0 ", "background:#C17A3C;color:#241A10;font-weight:600", "");

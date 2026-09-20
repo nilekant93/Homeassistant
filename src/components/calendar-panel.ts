@@ -51,7 +51,15 @@ export class KtCalendarPanel extends LitElement {
         border-radius: 0;
         padding: 0;
         box-shadow: none;
-        gap: 8px;
+        gap: 7px;
+      }
+
+      /* Inside the carousel a week row is about 26px, so the full-size
+         circle would be taller than the row it marks. */
+      .panel[data-bare] .today-mark {
+        width: 24px;
+        height: 24px;
+        font-size: 14px;
       }
 
       header {

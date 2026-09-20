@@ -29,6 +29,8 @@ export class KtLightCard extends LitElement {
       }
 
       .card {
+        position: relative;
+        overflow: hidden;
         width: 100%;
         height: 100%;
         background: var(--surface);
@@ -81,18 +83,31 @@ export class KtLightCard extends LitElement {
         min-width: 0;
       }
 
+      .card[data-row] {
+        padding: 14px 18px;
+      }
+
       .card[data-row] .icon-wrap {
-        width: 44px;
-        height: 44px;
-        flex: 0 0 44px;
-        border-radius: 13px;
+        width: 40px;
+        height: 40px;
+        flex: 0 0 40px;
+        border-radius: 12px;
       }
 
       .card[data-row] .name {
         font-size: 16px;
       }
 
+      /* Along the bottom edge rather than in the flow: a row card is short,
+         and a bar that claimed its own line would make the dimmable card
+         taller than the switches beside it. */
       .card[data-row] .bar {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 5px;
+        border-radius: 0;
         margin-top: 0;
       }
 

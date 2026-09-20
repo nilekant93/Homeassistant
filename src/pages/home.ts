@@ -7,8 +7,7 @@ import type { PanelMeta } from "../components/carousel";
 
 import "../components/carousel";
 import "../components/light-card";
-import "../components/weather-now";
-import "../components/weather-daily";
+import "../components/weather-panel";
 import "../components/calendar-panel";
 
 /** Ticks often enough that the displayed minute is never visibly stale. */
@@ -50,7 +49,7 @@ export class KtPageHome extends LitElement {
       .time {
         font-family: var(--font-display);
         font-weight: 600;
-        font-size: 100px;
+        font-size: 92px;
         line-height: 1;
         letter-spacing: -2px;
         color: var(--text);
@@ -64,7 +63,10 @@ export class KtPageHome extends LitElement {
       }
 
       kt-carousel {
-        flex: 0 0 300px;
+        /* Tall enough that the calendar gets roughly 28px per week row. At
+           the design's 300px the six-row grid was squeezed to about 18px,
+           which is less than the 26px circle marking today. */
+        flex: 0 0 352px;
       }
 
       .lights-section {
@@ -191,18 +193,22 @@ export class KtPageHome extends LitElement {
               >
                 ${weather?.entity
                   ? html`
-                      <kt-weather-now
+                      <kt-weather-panel
                         slot=${slotOf("now")}
+                        mode="hourly"
                         .entity=${this.hass?.states[weather.entity]}
-                        .hourly=${this.hourly}
+                        .entries=${this.hourly}
                         .today=${this.daily[0]}
-                        .hours=${weather.forecast_hours ?? 6}
-                      ></kt-weather-now>
-                      <kt-weather-daily
+                        .count=${weather.forecast_hours ?? 6}
+                      ></kt-weather-panel>
+                      <kt-weather-panel
                         slot=${slotOf("daily")}
-                        .daily=${this.daily}
-                        .days=${weather.forecast_days ?? 6}
-                      ></kt-weather-daily>
+                        mode="daily"
+                        .entity=${this.hass?.states[weather.entity]}
+                        .entries=${this.daily}
+                        .today=${this.daily[0]}
+                        .count=${weather.forecast_days ?? 6}
+                      ></kt-weather-panel>
                     `
                   : nothing}
                 ${calendar

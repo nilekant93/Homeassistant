@@ -645,42 +645,42 @@ function Ke(e, t) {
 }
 const Fe = b`
   :host {
-    --bg: #fbf9f5;
-    --surface: #ffffff;
-    --surface-2: #f2efe8;
-    --text: #21201b;
-    --text-muted: #726e64;
-    --border: #e7e2d6;
+    --bg: #f1e7d2;
+    --surface: #fbf8f1;
+    --surface-2: #e8dbbe;
+    --text: #2b2013;
+    --text-muted: #6f6248;
+    --border: #dccba1;
     --accent-amber: #c17a3c;
-    --accent-amber-soft: #f4e1c9;
+    --accent-amber-soft: #f6ddac;
     --accent-teal: #3e8c86;
     --accent-teal-soft: #dcefec;
-    --on-amber: #241a10;
-    --shadow: 0 1px 2px rgba(33, 32, 27, 0.05), 0 10px 28px rgba(33, 32, 27, 0.06);
+    --on-amber: #2b2013;
+    --shadow: 0 1px 2px rgba(43, 32, 19, 0.07), 0 10px 28px rgba(43, 32, 19, 0.09);
     /* Surface you can see through — used by the room chips on the vacuum map
        so the cleaned path stays visible underneath them. Written out per
        theme rather than mixed at runtime: color-mix is recent enough that an
        older WebView would silently drop the background entirely. */
-    --surface-veil: rgba(255, 255, 255, 0.62);
+    --surface-veil: rgba(251, 248, 241, 0.62);
 
     --font-body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
     --font-display: "Space Grotesk", "IBM Plex Sans", system-ui, sans-serif;
   }
 
   :host([data-theme="dark"]) {
-    --bg: #17181c;
-    --surface: #1f2126;
-    --surface-2: #26282e;
-    --text: #f1efe9;
-    --text-muted: #9c988e;
-    --border: #2e3036;
+    --bg: #1c1712;
+    --surface: #241d15;
+    --surface-2: #2d2419;
+    --text: #f1e7d6;
+    --text-muted: #a89a80;
+    --border: #3a2f20;
     --accent-amber: #e5a868;
-    --accent-amber-soft: #3b2e1c;
+    --accent-amber-soft: #3d2e1a;
     --accent-teal: #5fb6af;
     --accent-teal-soft: #1d3230;
-    --on-amber: #241a10;
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 10px 28px rgba(0, 0, 0, 0.4);
-    --surface-veil: rgba(31, 33, 38, 0.62);
+    --on-amber: #2b2013;
+    --shadow: 0 1px 2px rgba(10, 6, 2, 0.4), 0 10px 28px rgba(10, 6, 2, 0.45);
+    --surface-veil: rgba(36, 29, 21, 0.62);
   }
 `, w = b`
   *,
@@ -720,7 +720,9 @@ const Fe = b`
     width: 24px;
     height: 24px;
     border-radius: 50%;
-    background: #ffffff;
+    /* The palette's off-white rather than pure white, which was the one
+       cold value left in an otherwise warm interface. */
+    background: #fbf8f1;
     position: absolute;
     top: 4px;
     left: 4px;
@@ -4060,4 +4062,4 @@ oi.push({
   // the picker would be misleading.
   preview: !1
 });
-console.info("%c KOTITABLETTI %c 0.7.0 ", "background:#C17A3C;color:#241A10;font-weight:600", "");
+console.info("%c KOTITABLETTI %c 0.8.0 ", "background:#C17A3C;color:#241A10;font-weight:600", "");

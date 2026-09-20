@@ -101,9 +101,19 @@ views:
 
         # ── Kotinäkymä ───────────────────────────────────────────────────────
         home:
+          # Karusellikortti vuorottelee kolmea paneelia: sää, vuorokausi-
+          # ennuste ja kalenteri. Kosketus mihin tahansa kohtaan korttia —
+          # myös kalenterin kuukausinuoliin — pysäyttää kierron hold_seconds
+          # ajaksi. Paneelia voi vaihtaa myös pyyhkäisemällä.
+          carousel:
+            interval_seconds: 10
+            hold_seconds: 20
+
           weather:
             entity: weather.forecast_koti
-            forecast_days: 5
+            # Tuntislotit sääpaneelissa, vuorokaudet ennustepaneelissa.
+            forecast_hours: 6
+            forecast_days: 6
 
           calendar:
             show_week_numbers: true

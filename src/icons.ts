@@ -90,6 +90,12 @@ const paths: Record<string, SVGTemplateResult> = {
   `,
   close: svg`<path d="M6 6l12 12M18 6L6 18" />`,
 
+  cloud: svg`<path d="M7 18.5a4.5 4.5 0 0 1 .3-9 5.7 5.7 0 0 1 10.9 2 3.9 3.9 0 0 1-1 7H7Z" />`,
+  calendar: svg`
+    <rect x="3.5" y="5" width="17" height="15.5" rx="3" />
+    <path d="M3.5 9.5h17M8 3.5V6M16 3.5V6" />
+  `,
+
   play: svg`<path d="M8.5 5.2v13.6l11-6.8-11-6.8Z" />`,
   pause: svg`<path d="M9 5.5v13M15 5.5v13" />`,
   dock: svg`

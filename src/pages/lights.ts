@@ -89,6 +89,7 @@ export class KtPageLights extends LitElement {
                   ${others.map(
                     (light) => html`
                       <kt-light-card
+                        layout="tile"
                         .hass=${this.hass}
                         .config=${{ ...light, style: light.style ?? "switch" }}
                       ></kt-light-card>

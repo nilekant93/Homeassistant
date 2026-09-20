@@ -14,6 +14,11 @@ import type { HassEntity, HomeAssistant, LightConfig } from "../types";
 export class KtLightCard extends LitElement {
   @property({ attribute: false }) hass!: HomeAssistant;
   @property({ attribute: false }) config!: LightConfig;
+  /**
+   * "row" is the wide, short card used on the home grid; "tile" is the tall
+   * square used where a card gets as much height as width.
+   */
+  @property() layout: "row" | "tile" = "row";
 
   static styles = [
     base,
@@ -58,6 +63,37 @@ export class KtLightCard extends LitElement {
       .spacer {
         flex: 1;
         min-height: 12px;
+      }
+
+      /* In row layout the identity sits beside the icon instead of under it,
+         and the card only needs to be tall enough for one line of each. */
+      .card[data-row] {
+        justify-content: center;
+        gap: 10px;
+      }
+
+      .card[data-row] .row {
+        gap: 14px;
+      }
+
+      .card[data-row] .meta {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .card[data-row] .icon-wrap {
+        width: 44px;
+        height: 44px;
+        flex: 0 0 44px;
+        border-radius: 13px;
+      }
+
+      .card[data-row] .name {
+        font-size: 16px;
+      }
+
+      .card[data-row] .bar {
+        margin-top: 0;
       }
 
       .icon-wrap {
@@ -134,10 +170,21 @@ export class KtLightCard extends LitElement {
     // ones share the teal accent so the two groups stay distinguishable.
     const accent = dimmer ? lightColor(e) : "var(--accent-teal)";
     const accentSoft = dimmer ? `${lightColor(e)}33` : "var(--accent-teal-soft)";
+    const row = this.layout === "row";
+
+    const identity = html`
+      <div class="meta">
+        <div class="name">
+          ${this.config.name ?? e?.attributes.friendly_name ?? this.config.entity}
+        </div>
+        <div class="state">${this.stateLabel(e, dimmer)}</div>
+      </div>
+    `;
 
     return html`
       <button
         class="card"
+        ?data-row=${row}
         ?data-dimmer=${dimmer}
         ?data-off=${!on}
         aria-pressed=${on ? "true" : "false"}
@@ -150,20 +197,17 @@ export class KtLightCard extends LitElement {
             style=${`background: ${on ? accentSoft : "var(--surface-2)"};
                      color: ${on ? accent : "var(--text-muted)"}`}
           >
-            ${icon(this.config.icon ?? "bulb", 26)}
+            ${icon(this.config.icon ?? "bulb", row ? 22 : 26)}
           </div>
+
+          ${row ? identity : nothing}
 
           <div class="track" ?data-on=${on} style=${`background: ${on ? accent : "var(--border)"}`}>
             <div class="knob"></div>
           </div>
         </div>
 
-        <div class="spacer"></div>
-
-        <div class="meta">
-          <div class="name">${this.config.name ?? e?.attributes.friendly_name ?? this.config.entity}</div>
-          <div class="state">${this.stateLabel(e, dimmer)}</div>
-        </div>
+        ${row ? nothing : html`<div class="spacer"></div>${identity}`}
 
         ${dimmer
           ? html`

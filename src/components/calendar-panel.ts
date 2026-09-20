@@ -15,6 +15,8 @@ export class KtCalendarPanel extends LitElement {
   /** Calendar entity the footer line reads its next event from. */
   @property() nextEventFrom?: string;
   @property({ type: Boolean }) showWeekNumbers = true;
+  /** Drops the card chrome for use inside another card, such as the carousel. */
+  @property({ type: Boolean }) bare = false;
 
   @state() private cursor = new Date();
   @state() private today = new Date();
@@ -41,6 +43,15 @@ export class KtCalendarPanel extends LitElement {
         display: flex;
         flex-direction: column;
         gap: 14px;
+      }
+
+      .panel[data-bare] {
+        background: none;
+        border: none;
+        border-radius: 0;
+        padding: 0;
+        box-shadow: none;
+        gap: 8px;
       }
 
       header {
@@ -225,7 +236,7 @@ export class KtCalendarPanel extends LitElement {
     const gutter = this.showWeekNumbers ? "24px" : "0px";
 
     return html`
-      <div class="panel" style=${`--gutter: ${gutter}`}>
+      <div class="panel" ?data-bare=${this.bare} style=${`--gutter: ${gutter}`}>
         <header>
           <div class="month">${monthTitle(this.cursor)}</div>
           <button class="today-btn" aria-label="Tänään" @click=${this.goToday}>Tänään</button>

@@ -44,6 +44,7 @@ export interface LightConfig {
 }
 
 export interface HomeConfig {
+  carousel?: { interval_seconds?: number; hold_seconds?: number };
   clock?: { show_weekday?: boolean };
   weather?: { entity: string; forecast_days?: number; forecast_hours?: number };
   calendar?: {

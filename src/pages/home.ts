@@ -1,11 +1,14 @@
-import { LitElement, html, css, nothing } from "lit";
+import { LitElement, html, css, nothing, type PropertyValues } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { base } from "../theme";
 import { clockTime, longDate } from "../format";
-import type { HomeConfig, HomeAssistant } from "../types";
+import type { ForecastDay, HomeConfig, HomeAssistant } from "../types";
+import type { PanelMeta } from "../components/carousel";
 
+import "../components/carousel";
 import "../components/light-card";
-import "../components/weather-card";
+import "../components/weather-now";
+import "../components/weather-daily";
 import "../components/calendar-panel";
 
 /** Ticks often enough that the displayed minute is never visibly stale. */
@@ -17,8 +20,12 @@ export class KtPageHome extends LitElement {
   @property({ attribute: false }) config: HomeConfig = {};
 
   @state() private now = new Date();
+  @state() private hourly: ForecastDay[] = [];
+  @state() private daily: ForecastDay[] = [];
 
   private timer?: number;
+  private unsubs: Array<() => Promise<void>> = [];
+  private subscribedTo?: string;
 
   static styles = [
     base,
@@ -31,24 +38,6 @@ export class KtPageHome extends LitElement {
       .page {
         height: 100%;
         padding: 40px 48px;
-        display: flex;
-        flex-direction: column;
-        gap: 26px;
-      }
-
-      /* Upper band: clock and weather on the left, calendar on the right.
-         Both columns stretch to this height, which is what keeps the bottom
-         of the calendar level with the bottom of the weather card — and what
-         stops the calendar running the full length of the screen. */
-      .top {
-        flex: 0 0 444px;
-        display: flex;
-        gap: 32px;
-      }
-
-      .top-left {
-        flex: 1;
-        min-width: 0;
         display: flex;
         flex-direction: column;
         gap: 22px;
@@ -74,10 +63,8 @@ export class KtPageHome extends LitElement {
         margin-top: 8px;
       }
 
-      kt-weather-card {
-        flex: 1;
-        min-width: 0;
-        min-height: 0;
+      kt-carousel {
+        flex: 0 0 300px;
       }
 
       .lights-section {
@@ -96,18 +83,13 @@ export class KtPageHome extends LitElement {
         margin-bottom: 12px;
       }
 
-      /* One row across the full width. Four tiles of roughly 290 × 290
-         instead of the cramped 2 × 2 grid that only had half the width. */
       .lights {
         flex: 1;
         min-height: 0;
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 16px;
-      }
-
-      .calendar {
-        flex: 0 0 408px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-auto-rows: 1fr;
+        gap: 14px;
       }
     `,
   ];
@@ -120,46 +102,123 @@ export class KtPageHome extends LitElement {
   disconnectedCallback() {
     super.disconnectedCallback();
     if (this.timer) clearInterval(this.timer);
+    void this.unsubscribeAll();
+  }
+
+  protected willUpdate(changed: PropertyValues) {
+    if (!changed.has("hass") && !changed.has("config")) return;
+
+    const entityId = this.config.weather?.entity;
+    if (this.hass && entityId && this.subscribedTo !== entityId) {
+      void this.subscribeForecasts(entityId);
+    }
+  }
+
+  /**
+   * Both weather panels read from here rather than subscribing themselves.
+   * `weather/subscribe_forecast` carries one type per subscription, and two
+   * self-subscribing panels would open four where two will do.
+   */
+  private async subscribeForecasts(entityId: string) {
+    await this.unsubscribeAll();
+    this.subscribedTo = entityId;
+
+    for (const forecastType of ["hourly", "daily"] as const) {
+      try {
+        const unsub = await this.hass.connection.subscribeMessage<{
+          forecast: ForecastDay[];
+        }>(
+          (event) => {
+            const forecast = event.forecast ?? [];
+            if (forecastType === "hourly") this.hourly = forecast;
+            else this.daily = forecast;
+          },
+          {
+            type: "weather/subscribe_forecast",
+            forecast_type: forecastType,
+            entity_id: entityId,
+          }
+        );
+        this.unsubs.push(unsub);
+      } catch {
+        // A type the entity does not offer simply leaves its panel empty.
+      }
+    }
+  }
+
+  private async unsubscribeAll() {
+    const unsubs = this.unsubs;
+    this.unsubs = [];
+    this.subscribedTo = undefined;
+    for (const unsub of unsubs) {
+      try {
+        await unsub();
+      } catch {
+        /* connection already gone */
+      }
+    }
   }
 
   render() {
-    const { clock, weather, calendar, lights = [] } = this.config;
+    const { clock, weather, calendar, lights = [], carousel } = this.config;
+
+    const panels: PanelMeta[] = [];
+    if (weather?.entity) {
+      panels.push({ key: "now", label: "Sää", icon: "sun" });
+      panels.push({ key: "daily", label: "Ennuste", icon: "cloud" });
+    }
+    if (calendar) panels.push({ key: "calendar", label: "Kalenteri", icon: "calendar" });
+
+    // Slot names are positional, so the panels and their content must be
+    // built from the same list in the same order.
+    const slotOf = (key: string) => `p${panels.findIndex((p) => p.key === key)}`;
 
     return html`
       <div class="page">
-        <div class="top">
-          <div class="top-left">
-            <div class="clock">
-              <div class="time">${clockTime(this.now)}</div>
-              ${clock?.show_weekday === false
-                ? nothing
-                : html`<div class="date">${longDate(this.now)}</div>`}
-            </div>
-
-            ${weather?.entity
-              ? html`
-                  <kt-weather-card
-                    .hass=${this.hass}
-                    .entityId=${weather.entity}
-                    .days=${weather.forecast_days ?? 5}
-                    .hours=${weather.forecast_hours ?? 8}
-                  ></kt-weather-card>
-                `
-              : nothing}
-          </div>
-
-          ${calendar
-            ? html`
-                <div class="calendar">
-                  <kt-calendar-panel
-                    .hass=${this.hass}
-                    .nextEventFrom=${calendar.next_event_from}
-                    .showWeekNumbers=${calendar.show_week_numbers ?? true}
-                  ></kt-calendar-panel>
-                </div>
-              `
-            : nothing}
+        <div class="clock">
+          <div class="time">${clockTime(this.now)}</div>
+          ${clock?.show_weekday === false
+            ? nothing
+            : html`<div class="date">${longDate(this.now)}</div>`}
         </div>
+
+        ${panels.length
+          ? html`
+              <kt-carousel
+                .panels=${panels}
+                .intervalMs=${(carousel?.interval_seconds ?? 10) * 1000}
+                .holdMs=${(carousel?.hold_seconds ?? 20) * 1000}
+              >
+                ${weather?.entity
+                  ? html`
+                      <kt-weather-now
+                        slot=${slotOf("now")}
+                        .entity=${this.hass?.states[weather.entity]}
+                        .hourly=${this.hourly}
+                        .today=${this.daily[0]}
+                        .hours=${weather.forecast_hours ?? 6}
+                      ></kt-weather-now>
+                      <kt-weather-daily
+                        slot=${slotOf("daily")}
+                        .daily=${this.daily}
+                        .days=${weather.forecast_days ?? 6}
+                      ></kt-weather-daily>
+                    `
+                  : nothing}
+                ${calendar
+                  ? html`
+                      <kt-calendar-panel
+                        slot=${slotOf("calendar")}
+                        bare
+                        .hass=${this.hass}
+                        .nextEventFrom=${calendar.next_event_from}
+                        .showWeekNumbers=${calendar.show_week_numbers ?? true}
+                      ></kt-calendar-panel>
+                    `
+                  : nothing}
+              </kt-carousel>
+            `
+          : nothing}
 
         ${lights.length
           ? html`
@@ -168,7 +227,11 @@ export class KtPageHome extends LitElement {
                 <div class="lights">
                   ${lights.map(
                     (light) => html`
-                      <kt-light-card .hass=${this.hass} .config=${light}></kt-light-card>
+                      <kt-light-card
+                        layout="row"
+                        .hass=${this.hass}
+                        .config=${light}
+                      ></kt-light-card>
                     `
                   )}
                 </div>
